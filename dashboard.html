@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html{background:#fbfcfe}@media (prefers-color-scheme: dark){html{background:#121826}}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%2324407a'/%3E%3Crect x='15' y='11' width='21' height='4.5' rx='2.25' fill='%23fff' opacity='.5'/%3E%3Crect x='13' y='20.5' width='27' height='7' rx='2.5' fill='%23ffe45c'/%3E%3Crect x='17' y='22.75' width='15' height='2.5' rx='1.25' fill='%2324407a'/%3E%3Cpath d='M6.5 19.5 11.5 24 6.5 28.5Z' fill='%23ffe45c'/%3E%3Crect x='15' y='32.5' width='13' height='4.5' rx='2.25' fill='%23fff' opacity='.5'/%3E%3C/svg%3E"></head><body>
+<title>Dashboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap"><style>html:root { --bg: #fbfcfe; --paper: #fbfcfe; --surface: #ffffff; --panel: #ffffff; --ink: #1e2a44; --muted: #5d6680; --line: #dde2ec; --accent: #24407a; --accent-soft: #e7ecf7; --code-bg: #f3f5fa; --code: #f3f5fa; --f-body: "Atkinson Hyperlegible", "IBM Plex Sans", system-ui, sans-serif; --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace; }@media (prefers-color-scheme: dark) { html:root:not([data-theme="light"]) { --bg: #121826; --paper: #121826; --surface: #182032; --panel: #182032; --ink: #e6eaf3; --muted: #9aa3b8; --line: #2b354b; --accent: #9db6ef; --accent-soft: #223152; --code-bg: #141b2a; --code: #141b2a; } }html:root[data-theme="dark"] { --bg: #121826; --paper: #121826; --surface: #182032; --panel: #182032; --ink: #e6eaf3; --muted: #9aa3b8; --line: #2b354b; --accent: #9db6ef; --accent-soft: #223152; --code-bg: #141b2a; --code: #141b2a; }h1, h2, h3 { font-family: var(--f-body); }</style>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* (3 Nov, Ngoc: "design lại từ đầu", mockup 2 approved) the Dashboard answers three questions: which learner needs me?
+   what does the class find hard? what should I explain again?  So: the class bar · Needs a look (with the reason) ·
+   Learners (who needs a look first) · What the class finds hard (still wrong apart from fixed since) · Topics.
+   The page reads the Sheet through the Apps Script with the account's ticket. */
+:root { --ok: #1e7a3c; --help: #8cc3a0; --help-ink: #173b25; --bad: #b3261e; --warn: #9a6a00; --warn-bg: #fdecea; --warn-ink: #8a1c13;
+  --ok-soft: #e3f3e8; --bad-soft: #fbe7e5; --once-soft: #fdf2dc; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ok: #7fd49a; --help: #4f8f66; --help-ink: #eafff0; --bad: #ff8a80; --warn: #f3c969; --warn-bg: #3b1a17; --warn-ink: #ffb4ab;
+  --ok-soft: #1d3326; --bad-soft: #3b1a17; --once-soft: #3a3214; } }
+:root[data-theme="dark"] { --ok: #7fd49a; --help: #4f8f66; --help-ink: #eafff0; --bad: #ff8a80; --warn: #f3c969; --warn-bg: #3b1a17; --warn-ink: #ffb4ab; --ok-soft: #1d3326; --bad-soft: #3b1a17; --once-soft: #3a3214; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  padding: 20px max(16px, env(safe-area-inset-right, 0px)) 48px max(16px, env(safe-area-inset-left, 0px)); }
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 18px; }
+#main { display: grid; gap: 18px; }
+h1 { font-size: 28px; margin: 0; } h2 { font-size: 17px; margin: 0; } p { margin: 0; }
+.muted { color: var(--muted); } .small { font-size: 13px; } code, .code { font-family: var(--f-mono); }
+button, select, input { font: inherit; }
+.btn { cursor: pointer; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-weight: 600; white-space: nowrap; }
+.btn.main { background: var(--accent); color: var(--surface); border-color: var(--accent); } .btn.sm { font-size: 13px; padding: 4px 10px; border-radius: 8px; }
+.btn:disabled { opacity: .6; cursor: default; }
+select { padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font-weight: 600; }
+.head { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; } .head h1 { margin-right: auto; }
+.fresh { font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; display: grid; gap: 12px; min-width: 0; }
+.hd { display: flex; justify-content: space-between; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+.testmode { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 8px 14px; font-weight: 700; }
+.okmsg { background: var(--ok-soft); border: 1px solid var(--ok); border-radius: 10px; padding: 8px 12px; } .badmsg { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 8px 12px; }
+/* the class bar */
+.classbar { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
+.classbar .big { font-family: var(--f-mono); font-size: 26px; font-weight: 600; letter-spacing: 1px; }
+.sw { margin-left: auto; display: flex; gap: 10px; align-items: center; font-size: 14px; cursor: pointer; background: none; border: 0; padding: 0; color: var(--ink); }
+.sw .t { width: 40px; height: 22px; border-radius: 11px; background: var(--line); position: relative; flex: none; transition: background .2s; }
+.sw .t::after { content: ""; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .2s; }
+.sw[aria-checked="true"] .t { background: var(--ok); } .sw[aria-checked="true"] .t::after { left: 21px; }
+/* needs a look */
+.look { border-left: 4px solid var(--bad); } .look ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.look li { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; } .look li .who { min-width: 170px; font-weight: 600; }
+.why { font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 999px; }
+.why.again, .why.answer { background: var(--bad-soft); color: var(--bad); }
+.allgood { color: var(--ok); font-weight: 600; }
+/* learners */
+.legend { display: flex; gap: 6px 14px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+.legend > span { display: inline-flex; align-items: center; }   /* (3 Nov, Ngoc: "cái cao cái thấp") a circle with ✓/✗ sat lower than an empty one */
+.legend i { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; margin-right: 4px; flex: none; color: #fff; font-style: normal; font-size: 10px; font-weight: 700; }
+/* fixed columns: each row is its own grid, so the head and the rows line up only with fixed widths */
+.lrow { display: grid; grid-template-columns: 190px 350px minmax(0, 1fr) 96px 92px; gap: 8px 16px; align-items: center; padding: 10px 0 10px 10px; border-bottom: 1px solid var(--line); }
+.lrow.head2 { font-size: 12px; color: var(--muted); padding-top: 0; align-items: end; }
+.lrow.flag { box-shadow: inset 3px 0 0 var(--bad); }
+.nm b { display: block; } .nm span { font-size: 12px; color: var(--muted); }
+.sq { display: flex; gap: 3px; align-items: center; } .sq a, .sq span.c { width: 22px; height: 22px; margin: 0 5px; border-radius: 50%; background: var(--line); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; text-decoration: none; }
+.sq .ok { background: var(--ok); } .sq .help { background: linear-gradient(90deg, var(--help) 50%, var(--line) 50%); } .sq .bad { background: var(--bad); }
+.sq .cnt { margin-left: 8px; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.exrow { display: flex; gap: 3px; } .exrow span { width: 28px; text-align: center; font-size: 10px; line-height: 1.2; } .exrow b { display: block; font-size: 11px; color: var(--ink); } .exrow .low b { color: var(--bad); }
+.chip { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; margin: 1px 3px 1px 0; }
+.chip.still { background: var(--bad-soft); color: var(--bad); } .chip.fixed { background: var(--ok-soft); color: var(--ok); } .chip.once { background: var(--once-soft); color: var(--warn); }
+.last { font-size: 13px; color: var(--muted); } .last.old { color: var(--bad); }
+.acts { display: flex; gap: 6px; justify-content: flex-end; align-items: center; } .go { color: var(--accent); font-weight: 600; white-space: nowrap; text-decoration: none; }
+details.more { position: relative; } details.more > summary { list-style: none; cursor: pointer; border: 1px solid var(--line); border-radius: 8px; padding: 0 8px; color: var(--muted); }
+details.more > summary::-webkit-details-marker { display: none; }
+.menu { position: absolute; right: 0; top: 28px; z-index: 5; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 6px; display: grid; gap: 4px; min-width: 210px; box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+.menu button { text-align: left; border: 0; background: none; color: var(--ink); padding: 6px 8px; border-radius: 6px; cursor: pointer; } .menu button:hover { background: var(--line); }
+.out { grid-column: 1 / -1; font-size: 14px; } .out:empty { display: none; } .code-box { font-family: var(--f-mono); font-size: 20px; letter-spacing: 2px; }
+.filter { font-size: 13px; background: var(--accent-soft); color: var(--accent); padding: 4px 10px; border-radius: 999px; font-weight: 600; border: 0; cursor: pointer; }
+@media (max-width: 860px) {
+  .lrow { grid-template-columns: minmax(0, 1fr) auto; padding-left: 10px; } .lrow.head2 { display: none; }
+  .lrow .sqcell { grid-column: 1 / -1; grid-row: 2; } .lrow .chips { grid-column: 1 / -1; } .lrow .last { grid-row: 1; grid-column: 2; text-align: right; } .lrow .acts { grid-column: 1 / -1; justify-content: flex-start; }
+}
+/* the class finds hard / topics */
+.two { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 860px) { .two { grid-template-columns: minmax(0, 1fr); } .look li .who { min-width: 0; } .sw { margin-left: 0; } }
+.hard { display: grid; gap: 12px; } .hard .m { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; }
+.hard .m .w { font-size: 13px; color: var(--muted); } .hard .m .w b { color: var(--bad); } .hard .m .w .f { color: var(--ok); }
+.hard .m.sel { background: var(--accent-soft); margin: 0 -10px; padding: 6px 10px; border-radius: 10px; }
+.bar { display: grid; gap: 4px; } .bar .r { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; } .bar .r b { font-variant-numeric: tabular-nums; }
+.track { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; display: flex; } .track i { display: block; height: 100%; } .track .g { background: var(--ok); } .track .p { background: var(--warn); }
+.bar .tc { font-size: 13px; white-space: nowrap; } .bar .tc .g { color: var(--ok); } .bar .tc .p { color: var(--warn); } .bar .tc .z, .bx .bc .z { color: var(--muted); font-weight: 400; }
+.empty { color: var(--muted); }
+.nums { display: flex; gap: 3px; } .nums span { width: 32px; text-align: center; font-size: 14px; font-weight: 700; color: var(--ink); }
+.counts { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 14px; } .counts .s { color: var(--bad); } .counts .o { color: var(--warn); } .counts .f { color: var(--ok); }
+.lrow.you { background: var(--accent-soft); border-radius: 10px; border-bottom: 0; margin-top: 8px; }
+.bx { display: grid; gap: 8px; } .bx .r { display: grid; grid-template-columns: 90px minmax(0, 1fr) 190px; gap: 12px; align-items: center; font-size: 14px; }
+.bx .bc { font-size: 13px; display: flex; justify-content: flex-end; gap: 12px; font-variant-numeric: tabular-nums; } .bx .bc > span { display: inline-flex; align-items: center; gap: 4px; }
+.bx .bc i { display: inline-grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; color: #fff; font-style: normal; font-size: 9px; font-weight: 700; }
+.bx .bc i.a { background: var(--ok); } .bx .bc i.b { background: linear-gradient(90deg, var(--help) 50%, var(--line) 50%); } .bx .bc i.c { background: var(--bad); } .bx .bc i.d { background: var(--line); }
+.track2 { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; display: flex; } .track2 i { display: block; height: 100%; } .track2 .a { background: var(--ok); } .track2 .b { background: var(--help); } .track2 .c { background: var(--bad); }
+@media (max-width: 600px) { .bx .r { grid-template-columns: 1fr; gap: 3px; } }
+.ml { display: grid; } .sec { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; padding: 14px 0 4px; border-bottom: 1px solid var(--line); }
+details.mi { border-bottom: 1px solid var(--line); } details.mi > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: minmax(0, 1fr) 240px auto; gap: 8px 18px; align-items: center; padding: 12px 0; }
+details.mi > summary::-webkit-details-marker { display: none; } details.mi > summary .t::before { content: "▸ "; color: var(--muted); } details.mi[open] > summary .t::before { content: "▾ "; }
+.mi .t .c { font-family: var(--f-mono); font-size: 12px; color: var(--muted); margin-left: 6px; }
+.stc { display: grid; gap: 5px; font-size: 13px; } .stc .bar { height: 10px; border-radius: 5px; background: var(--line); display: flex; overflow: hidden; } .stc .bar i { display: block; height: 100%; }
+.stc .s { background: var(--bad); } .stc .o { background: #e0b04a; } .stc .f { background: var(--ok); } .stc .sw { color: var(--bad); } .stc .fw { color: var(--ok); }
+details.mi .mt { margin: 0 0 12px; }
+.mh, details.mi.m3 > summary { display: grid; grid-template-columns: minmax(0, 1fr) 96px 96px 96px 90px; gap: 8px 12px; align-items: center; }
+details.mi.m1 > summary { grid-template-columns: minmax(0, 1fr) 140px 90px; }
+.mh { font-size: 12px; color: var(--muted); padding: 4px 0 6px; border-bottom: 1px solid var(--line); } .mh span:not(:first-child) { text-align: center; }
+.nc { text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; } .nc.s { color: var(--bad); } .nc.o { color: #b07c12; } .nc.f { color: var(--ok); }
+.nl { font-size: 14px; color: var(--muted); } .card.oth { background: color-mix(in srgb, var(--surface) 92%, var(--line)); }
+#mistakes-box, .mtab { display: grid; gap: 16px; }
+@media (max-width: 760px) { .mh { display: none; } details.mi.m3 > summary { grid-template-columns: repeat(3, auto) 1fr auto; } details.mi.m3 > summary .t { grid-column: 1 / -1; }
+  .nc { text-align: left; font-size: 13px; } .nc.z { display: none; } .nc:not(.z)::after { content: " " attr(data-l); font-weight: 400; }
+  details.mi.m3 > summary .btn { grid-column: 5; }
+  details.mi.m1 > summary { grid-template-columns: minmax(0, 1fr) auto; } details.mi.m1 > summary .t { grid-column: 1 / -1; } }
+.keyline { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); } .keyline i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+@media (max-width: 760px) { details.mi > summary { grid-template-columns: minmax(0, 1fr) auto; } details.mi > summary .stc { grid-column: 1 / -1; grid-row: 2; } }
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; display: grid; gap: 2px; color: var(--ink); text-decoration: none; border-top: 4px solid var(--line); }
+a.tile[href]:hover { border-color: var(--accent); } .tile .l { font-size: 13px; color: var(--muted); font-weight: 600; } .tile .v { font-size: 30px; font-weight: 700; line-height: 1.15; } .tile .s { font-size: 13px; color: var(--muted); }
+.tile.ok { border-top-color: var(--ok); } .tile.bad { border-top-color: var(--bad); } .tile.bad .v { color: var(--bad); } .tile.warn { border-top-color: var(--warn); }
+@media (max-width: 600px) { .tiles { grid-template-columns: minmax(0, 1fr); } }
+.two > .card { height: 100%; align-content: start; } .two { align-items: stretch; }
+.hard .m > div { min-width: 0; }
+/* (5 Nov night, Ngoc: mockup ok) How the app did: five questions for the thesis, one card each */
+.ev { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 760px) { .ev { grid-template-columns: minmax(0, 1fr); } }
+.ev .card { align-content: start; } .ev .card.wide { grid-column: 1 / -1; } .ev .evnote { grid-column: 1 / -1; margin: 0; }
+.ev .q { margin: 0; font-size: 16px; } .ev .big { font-size: 34px; font-weight: 700; line-height: 1; } .ev .big small { font-size: 14px; font-weight: 500; color: var(--muted); margin-left: 6px; }
+.ev .bar { display: flex; gap: 2px; height: 14px; } .ev .bar i { display: block; height: 100%; position: relative; cursor: default; } .ev .bar i:first-child { border-radius: 4px 0 0 4px; } .ev .bar i:last-child { border-radius: 0 4px 4px 0; }
+.ev .bar i:hover::after { content: attr(data-t); position: absolute; left: 0; top: 18px; white-space: nowrap; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 3px 7px; font-size: 12px; color: var(--ink); z-index: 3; font-style: normal; }
+.ev ul.k { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: 13px; } .ev ul.k li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 8px; align-items: center; } .ev ul.k i { width: 10px; height: 10px; border-radius: 3px; display: block; } .ev ul.k b { font-weight: 600; }
+.ev .why { font-size: 12.5px; color: var(--muted); margin: 0; font-weight: 400; }
+.ev h3.sub { margin: 6px 0 0; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.ev table.evt { border-collapse: collapse; font-size: 13px; width: 100%; } .ev .evt th { text-align: left; font-weight: 600; color: var(--muted); font-size: 12px; padding: 4px 8px; border-bottom: 1px solid var(--line); }
+.ev .evt td { padding: 5px 8px; border-bottom: 1px solid var(--line); } .ev .evt td:nth-child(n+2):nth-child(-n+6), .ev .evt th:nth-child(n+2):nth-child(-n+6) { text-align: right; width: 70px; } .ev .evt td.mb { width: 160px; } .ev .bar.sm { height: 8px; }
+.ev .evw { overflow-x: auto; } .ev .evt td:first-child { min-width: 150px; } @media (max-width: 760px) { .ev .evt td.mb, .ev .evt th:last-child { display: none; } .ev .evt td:nth-child(n+2), .ev .evt th:nth-child(n+2) { width: auto; } }
+/* (3 Nov, Ngoc: "làm 2 3 tab chia vụ đó ra") Overview · Learners · Mistakes */
+.dtabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-top: -4px; overflow-x: auto; scrollbar-width: none; }
+.dtabs a { white-space: nowrap; padding: 8px 14px 9px; color: var(--muted); text-decoration: none; font-weight: 600; box-shadow: inset 0 -2px 0 transparent; }
+.dtabs a[aria-current="page"] { color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
+.mt { width: 100%; border-collapse: collapse; font-size: 14px; } .mt th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 500; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: bottom; }
+/* (4 Nov, Ngoc) Where: the program on hover / focus, the wrong line marked (as in the Learner log) */
+.wl { position: relative; cursor: help; text-decoration: underline dotted; text-underline-offset: 3px; } .wl:focus { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+.wtip { display: none; position: absolute; left: 0; top: calc(100% + 4px); z-index: 20; min-width: 200px; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; box-shadow: 0 8px 24px rgba(0,0,0,.15); font-family: var(--f-mono, monospace); font-size: 13px; line-height: 1.6; white-space: pre; text-align: left; }
+.wtip > span { display: block; padding: 0 4px; border-radius: 4px; } .wtip i { font-style: normal; color: var(--muted); display: inline-block; width: 1.6em; } .wtip .hl { background: rgba(255, 214, 0, .35); }
+.wl:hover .wtip, .wl:focus .wtip { display: block; }
+.ctip { font-family: var(--f-body, inherit); white-space: normal; min-width: 360px; } .ctip em { font-style: normal; color: var(--muted); } .ctip b { display: block; padding: 0 4px; font-size: 12px; color: var(--muted); }
+.mt td { padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; } .mt .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mt .num.still { color: var(--bad); font-weight: 700; } .mt code.rt { color: var(--ok); font-weight: 700; } .mt .num.fixed { color: var(--ok); } .mt code { font-family: var(--f-mono); }
+.mt tr.grp td { background: var(--bg); font-size: 12px; color: var(--muted); font-weight: 600; padding: 6px 8px; }
+@media (max-width: 760px) { .mt, .mt tbody, .mt tr, .mt td { display: block; } .mt tr:first-child { display: none; } .mt tr { border-bottom: 1px solid var(--line); padding: 8px 0; } .mt td { border: 0; padding: 2px 0; } .mt .num { text-align: left; } .mt .num::before { content: attr(data-l) " "; color: var(--muted); font-weight: 400; } }
+</style>
+<style>
+/* (2 Nov, Ngoc: "title rất nhỏ … 1 block để title, rồi mới block tab ở dưới") two blocks: the name, large, with the language
+   and the account on the right; under it the pages, the line under the current page on the bar's bottom line.
+   (5 Nov, Ngoc: new logo, L1 + A in Claude outputs/Logo và header (5-11)) the logo is a line of code marked in yellow with ▸, as the
+   current line in the app; the tabs start at the left edge, their line as wide as the word */
+.sitenav { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; column-gap: 16px;
+  max-width: 1280px; margin: 0 auto 24px; border-bottom: 1px solid var(--line); font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 16px; }
+.sitenav a { text-decoration: none; }
+.sitenav .brand { grid-row: 1; grid-column: 1; justify-self: start; display: inline-flex; align-items: center; gap: 14px; color: var(--ink); padding: 20px 0 12px; min-width: 0; }
+.sitenav .brand .logo { width: 50px; height: 50px; flex: none; display: block; }
+.sitenav .brand .bt { display: grid; line-height: 1.1; gap: 4px; min-width: 0; }
+.sitenav .brand b { font-weight: 700; font-size: 28px; letter-spacing: -.02em; white-space: nowrap; }
+.sitenav .brand small { font-weight: 400; font-size: 14.5px; color: var(--muted); letter-spacing: .02em; }
+/* (5 Nov night, Ngoc: layout 1, from the "Fragments" picture, on every page) the tabs in the middle of the top bar, on the
+   name's line; on the About pages no line under the bar (the sub-tabs have their own) */
+.sitenav .hdr-right { grid-row: 1; grid-column: 3; justify-self: end; margin-left: 0; }
+.sitenav .nav-tabs { grid-row: 1; grid-column: 2; justify-content: center; display: flex; gap: 36px; align-items: stretch; align-self: stretch; }
+.sitenav:has(a[data-page="about"][aria-current]) { border-bottom: 0; margin-bottom: 18px; }
+@media (max-width: 860px) { .sitenav .nav-tabs { grid-row: 2; grid-column: 1 / -1; justify-content: start; gap: 28px; } }
+.sitenav .nav-tabs a { display: flex; align-items: center; color: var(--muted); padding: 10px 0 12px; font-size: 16.5px; font-weight: 500; box-shadow: inset 0 -2px 0 transparent; transition: color .15s, box-shadow .15s; }
+.sitenav .nav-tabs a:hover { color: var(--ink); box-shadow: inset 0 -2px 0 var(--line); }
+.sitenav .nav-tabs a[aria-current="page"] { color: var(--accent); font-weight: 600; box-shadow: inset 0 -2px 0 var(--accent); }
+.sitenav .nav-tabs a[hidden] { display: none; }
+.sitenav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* (4 Nov, chat 10, Ngoc: "bên exercise hay progress hay dashboard cũng vậy") every page as wide as this bar, lined up with it */
+.sitenav ~ .wrap { max-width: 1280px; }
+@media (max-width: 700px) {
+  .sitenav { margin-bottom: 16px; font-size: 15px; }
+  .sitenav .brand { gap: 10px; padding: 12px 0 10px; } .sitenav .brand .logo { width: 38px; height: 38px; }
+  .sitenav .brand b { font-size: 20px; } .sitenav .brand small { font-size: 12px; }
+  .sitenav .nav-tabs { gap: 20px; } .sitenav .nav-tabs a { padding: 9px 0 10px; font-size: 15px; }
+}
+@media (max-width: 430px) { .sitenav .hdr-langdd { display: none; }   /* the language is in Settings too (menu ☰ / account) */ .sitenav .hdr-right { gap: 6px; } .sitenav .brand b { font-size: 17px; } .sitenav .brand small { display: none; } .sitenav .brand { gap: 8px; } .sitenav .brand .logo { width: 32px; height: 32px; } }
+@media (max-width: 370px) { .sitenav .brand .logo { display: none; } .sitenav .brand b { font-size: 16px; } }
+</style>
+<!-- (2 Nov, Ngoc) About (the first page, as a home page) · Exercises · Dashboard (teachers only); the name → About; on the right: 🌐 language and Sign in / the account
+     menu (web/site/account_core.js).  How it works is inside About; the Follow-up map is linked from there. -->
+<nav class="sitenav" aria-label="Pages">
+  <a class="brand" href="about.html" aria-label="Python Tracer for Beginners: About"><svg class="logo" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="#24407a"/><rect x="15" y="11" width="21" height="4.5" rx="2.25" fill="#fff" opacity=".5"/><rect x="13" y="20.5" width="27" height="7" rx="2.5" fill="#ffe45c"/><rect x="17" y="22.75" width="15" height="2.5" rx="1.25" fill="#24407a"/><path d="M6.5 19.5 11.5 24 6.5 28.5Z" fill="#ffe45c"/><rect x="15" y="32.5" width="13" height="4.5" rx="2.25" fill="#fff" opacity=".5"/></svg><span class="bt"><b>Python Tracer</b><small>for beginners</small></span></a>
+  <div class="nav-tabs">
+    <a href="about.html" data-page="about">About</a>
+    <a href="next.html" data-page="next">Exercises</a>
+    <a href="next.html?progress=1" data-page="progress" id="nav-prog" hidden>My progress</a>
+    <a href="dashboard.html" data-page="dashboard" aria-current="page" id="nav-dash" hidden>Dashboard</a>
+  </div>
+  <div class="hdr-right" id="hdr-right"></div>
+</nav>
+<script>
+var SITE_SHEET_URL = "https://script.google.com/macros/s/AKfycbz32AkhygZzRsIYVz7N_DZ7d-VyvCgYF0dKh0knPb9X0O1DHCTl-lTn94TS1EVBS7YLMw/exec";
+// ================================================================ account_core.js (2 Nov, Ngoc): on EVERY page
+// (inserted with the menu, web/site/nav.html, by tools/build_web.py).  The account kept in this browser, the calls to the
+// Apps Script, the password rules, and the top bar: 🌐 language, Sign in / the account menu (N ▾), Settings.
+// The Exercises page (next_account.js) adds the progress, the log rows and the viewer; signin.html is the full page
+// for Log in / Sign up / Forgot password.
+const ACC_KEY = "tracer-account-v1", PROGRESS_LS = "tracer-progress-v1", GUEST_KEY = "tracer-guest";
+let account = null;
+try { account = JSON.parse(localStorage.getItem(ACC_KEY) || "null"); } catch (e) {}
+function storeAccount() { try { account ? localStorage.setItem(ACC_KEY, JSON.stringify(account)) : localStorage.removeItem(ACC_KEY); } catch (e) {} }
+const accEsc = t => String(t == null ? "" : t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "\'": "&#39;" }[c]));
+// the address of the Apps Script: the Exercises page has its own SHEET_URL; the other pages get SITE_SHEET_URL (build)
+function sheetUrl() { try { if (typeof SHEET_URL === "string" && SHEET_URL) return SHEET_URL; } catch (e) {} return SITE_SHEET_URL; }
+const SHEET_ON = () => sheetUrl().startsWith("https://");
+// ---------------------------------------------------------------- talking to the Apps Script
+// A plain POST (no extra headers: a "simple request"); the Apps Script answers JSON.  "busy" (another request holds the
+// lock) → try again a little later.
+async function api(action, data, tries = 4) {
+  if (!SHEET_ON()) throw new Error("offline");
+  const body = JSON.stringify({ action, ...(data || {}), auth: account ? { username: account.username, ticket: account.ticket } : null });
+  for (let i = 0; ; i++) {
+    let r;
+    try { const res = await fetch(sheetUrl(), { method: "POST", body }); r = await res.json(); }
+    catch (e) { if (i + 1 >= tries) throw e; r = { error: "busy" }; }
+    if (r.error !== "busy" || i + 1 >= tries) return r;
+    await new Promise(ok => setTimeout(ok, 1500 * (i + 1) + Math.random() * 1000));
+  }
+}
+// the log rows and reports (template.html save(), next_report.js, next_logview.js): with the ticket; none without an account
+
+// ---------------------------------------------------------------- the password: PBKDF2 in the browser (Web Crypto)
+const ROUNDS = 600000;
+function randomHex(bytes) { return [...crypto.getRandomValues(new Uint8Array(bytes))].map(b => b.toString(16).padStart(2, "0")).join(""); }
+async function passKey(password, saltHex) {
+  const salt = new Uint8Array(saltHex.match(/../g).map(h => parseInt(h, 16)));
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: ROUNDS }, base, 256);
+  return [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+// the rules (2 Nov, Ngoc): no Vietnamese accents, at least 8 characters (⚠ ours), not a common password: the 2,087
+// passwords of 8 characters or more among the 10,000 most common (SecLists 10k-most-common.txt, MIT licence), plus
+// the 50 of the first list (password123, matkhau123, hocsinh123 …, ours); shorter ones already fail "at least 8"
+const COMMON_PW = new Set("0.0.0.000 00000000 01234567 063dyjuy 085tzzqi 09876543 10101010 11001001 11111111 11112222 11223344 11235813 12121212 12312312 123123123 12341234 12344321 12345678 123456789 1234567890 12345679 123456aa 1234abcd 1234qwer 12locked 12qwaszx 13131313 13576479 14141414 14725836 14789632 151nxjmt 154ugeiu 17011701 17171717 18436572 19691969 19741974 19781978 19841984 1a2b3c4d 1letmein 1michael 1million 1passwor 1q2w3e4r 1q2w3e4r5t 1qaz2wsx 1qazxsw2 1x2zkg8w 20002000 20012001 201jedlz 20202020 20spanks 21122112 21212121 22222222 23232323 23skidoo 24242424 24682468 25252525 25802580 31415926 33333333 368ejhih 380zliki 383pdjvl 44444444 474jdvff 50spanks 51505150 551scasi 554uzpad 55555555 55bgates 5wr2i7h8 66666666 66668888 69696969 69camaro 766rglqy 77777777 78945612 863abgsg 87654321 88888888 8j4ye3uz 911turbo 98765432 987654321 99999999 a1234567 a1b2c3d4 aaaaaaa1 aaaaaaaa aardvark abc12345 abcd1234 abcdefg1 abcdefgh aberdeen abnormal absolute absolutely acapulco access14 access99 achilles acidburn adelaide admin123 adrienne aerosmit airborne aircraft airforce airplane albatros alejandr alessand alexalex alexande alexander alexandr alexandra alfarome alleycat alliance allison1 allnight allstate almighty alpha123 alphabet amateurs amatuers ambrosia america1 american amethyst amsterda amsterdam anaconda anastasi andersen anderson andromed andyandy andyod22 angelica angelika angelina anhyeuem animated annabell annmarie antelope anthony1 anthony7 anything aolsucks apollo13 apple123 applepie aquarius archange architec argentin arizona1 arkansas armstron arsenal1 asdf1234 asdfasdf asdfghjk asdfghjkl ashleigh assassin asshole1 assholes atlantic atlantis atreides attitude attorney auckland augustus austin31 australi australia avalanch aviation azertyui b929ezzh baberuth babybaby babyblue babycake babydoll babyface babygirl babylon5 babylove backbone backdoor badabing balloons baltimor bangbang barbados barcelon barcelona barefeet barefoot baritone basebal1 baseball baseball1 basement basketba basketball bastards batman12 bbbbbbbb bcfields bearbear bearcats beatles1 beatrice beautifu beautiful beefcake beerbeer beethove bellagio bendover benjamin bergkamp berkeley bettyboo bigballs bigblack bigblock bigboobs bigbooty bigbucks bigdaddy bigdick1 bigdicks bigmoney bigpenis bigpoppa bigtruck billabon billbill billybob billyboy binladen birthday birthday1 birthday4 bitchass blackbir blackcat blackcoc blackdog blackhaw blackice blackjac blackjack blacklab blackman blackout blessing blink182 blizzard blowfish blue1234 blueball bluebell blueberr bluebird blueblue blueeyes bluefish bluejays bluemoon bluesman bobafett bobdylan bollocks bonehead bookworm borabora bordeaux borussia bradford brandon1 brewster brighton brigitte brisbane brittany brittney broadway broncos1 brooklyn brothers browning brucelee bubba123 bubbles1 buckaroo buckeyes buckshot budapest buddy123 buddyboy budlight budweise buffalo1 building bukowski bulldawg bulldog1 bulldogs bulletin bullfrog bullseye bullshit bullwink bunghole business businessbabe buttercu butterfl butterfly buttfuck butthead butthole cabernet cadillac caldwell calendar caliente californ california caligula calimero callaway callisto camaross cambridg cameltoe cameron1 campbell canadian candyass candyman cannabis capetown capitals capricor capslock captain1 cardinal cardinals care1839 carebear carlitos carnival carolina caroline carpedie carpente cartman1 cartoons casanova cashflow cashmone cassandr castillo catalina catfight catherin catherine catwoman cavalier cbr900rr cccccccc celebrity cerberus cezer121 chadwick chainsaw challeng chambers champion chandler changeme chargers charisma charlene charles1 charlie1 charlie123 charlie2 charlott charlotte charlton checkers checkmat cheerleaers chelsea1 chemical cherokee cherries cheshire chester1 chestnut chevelle chevrole chevrolet chewbacc cheyenne chicago1 chicken1 chickens children chipmunk chiquita chocolat chocolate choochoo chris123 chrisbln christia christian christie christin christina christine christma christmas christop christopher chrysler chuckles churchil cinnamon citation civilwar clarence clarinet clarissa classics claudia1 claymore clemente cleopatr clevelan cleveland clifford climbing clippers clitoris close-up clueless cocacola cocksuck cocksucker cocktail coldbeer coldplay colombia colonial colorado coltrane columbia columbus comanche commande commando complete computer concorde concrete confused conquest constant consumer contains contortionist contract coolcool cooldude coolhand coolness copenhag corleone cornhole cornwall corvet07 corvette costello cosworth courtney coventry cowboys1 crawford crazybab crazyman creampie creation creative creature creepers crescent cricket1 criminal cristian cristina cromwell crusader crystal1 csfbr5yy culinary customer cutiepie cybersex cyclones cygnusx1 dad2ownu daedalus daisydog danielle dannyboy dapzu455 daredevi darkange darklord darkness darkside darkstar darthvad daughter davecole davedave davidson daylight dddddddd deadhead deadpool deadspin death666 december deepthroat deerhunt deeznuts deeznutz defender deftones delaware delldell delpiero designer destiny1 detectiv devil666 devildog devilman diamond1 diamonds dickdick dickhead dietcoke digital1 dilbert1 dilligaf dingdong dinosaur dipstick director dirtbike dirtydog disaster discover division doberman dodgeram dodgers1 doghouse dogpound dolemite dolphin1 dolphins dominick dominion dominiqu dontknow doomsday doughboy doughnut downhill downtown dragon12 dragon69 dragonba dragonball dragonfl dragster dreamcas dreamer1 dreaming dripping drowssap drpepper drummer1 dudedude dukeduke dutchess dynamite earnhard earthlin earthlink eastside eastwood eatmenow eatpussy eclipse1 edgewise edmonton eeeeeeee eggplant eighteen einstein ejaculation elcamino eldiablo eldorado electric electron elephant elisabet elizabet elizabeth embalmer emmanuel emyeuanh enforcer engineer england1 enternow enterpri enterprise entrance envelope erection ericsson escalade espresso estrella eternity evangeli everlast evolutio excalibu excalibur exchange experience experienced explorer express1 f00tball fairlane faithful fandango fantasia fantasies farscape fastball fatluvr69 favorite favorite2 favorite6 fearless feathers february federico feelgood fellatio ferguson fernando ferrari1 festival ffffffff ffvdj474 fidelity fighting films+pic+galeries fingerig fireball fireblad firefigh firefire firehawk firewall fishbone fishcake fisherma fishfish fishhead fishing1 fishtank flamingo flanders flashman flathead fletcher flexible flipflop flipmode florence florida1 flounder flyers88 football football1 fordf150 foreplay foreskin forgetit formula1 forsaken fortress fortune12 fountain foxylady francesc francine francois frankie1 franklin freckles frederic fredfred fredrick freedom1 freefall freefree freepass freeporn freeuser freewill frenchie friendly frogfrog front242 frontier fuck_inside fuckface fuckfuck fuckhead fuckinside fuckoff1 fuckthis fuckyou1 fuckyou2 fullback fullmoon funstuff funtimes fussball fuzzball gabriel1 gabriela gabriell galeries gallaries gamecock gamecube gameover gandalf1 gangbang gangbanged gangster garfield gargoyle garrison gateway1 gateway2 gatorade general1 generals genesis1 geneviev geoffrey gerhardt geronimo gertrude gesperrt getmoney getsdown gfxqx686 gggggggg gilligan ginscoot giovanna giovanni girfriend giuseppe giveitup gizmodo1 gladiato gladiator glendale glennwei gnasher23 godfathe godfather godsmack godspeed godzilla gogators goldberg goldeney goldfing goldfish goldstar goldwing golfball golfgolf gonzales gonzalez goodfell goodgirl goodluck goodtime goodyear goofball gooseman gordon24 gorgeous gotohell gotyoass graduate graphics grateful graywolf greatest greatone green123 greenbay greenday greenman gregory1 gretchen greywolf griffith gsxr1000 guardian guinness gymnastic hahahaha hairball halflife hallowee hamilton handball handsome handyman hannibal happines happy123 happyday happydog happyman hardball hardcock hardcore harddick hardrock hardware hardwood harrison hartford hastings hattrick hawaii50 hawaiian hawkeyes hawkwind hawthorn hayabusa heather1 hedgehog heineken heinrich hellfire hello123 hellohel hellyeah hercules herewego heritage hetfield hhhhhhhh highbury highheel highland highlander highlife hihje863 hillbill hillside hocsinh1 hocsinh123 holidays hollywoo hollywood holyshit homemade homepage homepage- honeybee honeydew hongkong honolulu hooligan hoosiers hooters1 hopeless hornyman horseman horsemen hotgirls hotmail0 hotmail1 hotpussy hotstuff hounddog housewife housewifes houston1 hugetits hugohugo humphrey hurrican hurricane huskers1 hyperion hzze929b ibilltes icecream icehouse idontkno idontknow ihateyou iiiiiiii illinois illmatic illusion ilovegod ilovesex iloveyou iloveyou! iloveyou1 iloveyou2 immortal imperial implants infantry infinite infiniti infinity innocent insanity insertion insertions insomnia inspiron instinct interacial intercourse interest internal internet intrepid intruder iqzzt580 irishman isabella isabelle isacs155 islander istanbul istheman italiano iverson3 jackass1 jackjack jackson1 jackson5 jakejake james007 jamesbon jamesbond japanees japanese jasmine1 jayhawks jeanette jediknig jeepjeep jeepster jefferso jeffjeff jellybea jennifer jennings jeremiah jermaine jessica1 jiggaman jjjjjjjj jo9k2jw2 johannes johndeer johngalt johnjohn johnmish johnson1 johnston jojojojo jonathan jonathon jordan23 josephin joystick juliette junkmail jupiter1 jupiter2 jurassic just4fun justdoit juventus kamikaze kangaroo katarina katherin katherine kathleen kawasaki kayleigh kcchiefs kcj9wx5n kentucky kenworth keyboard keystone kikimora killbill killkill kimberly kingfish kingkong kingrich kingston kirkland kisskiss kittycat kittykat kkkkkkkk klondike knickerless knickers knockers knuckles kordell1 kristian kristin1 kristina kristine labrador lacrosse laetitia lakeside lakewood lalakers lalalala lancelot landmark laserjet lasvegas laughing laurence lavalamp lawrence lebowski leedsutd lemonade leonardo lesbians letmein1 letmein2 letmein22 letmeinn letmesee letsdoit lexingky lifehack lifetime lighthou lighting lightnin lightning limewire lincoln1 lionhear lionking lipstick lisalisa littlema liverpoo liverpool lkjhgfds llllllll lockdown lockerroom logitech lollipop lollypop lonesome lonestar lonewolf longdong longhair longhorn longjohn longshot lorraine losangel lovelife lovelove loverboy loverman lowrider luckydog luckyone lunchbox luv2epus macaroni macdaddy macgyver macintos madeline madison1 magazine magellan magician magicman magnolia mainland majestic makaveli mallorca mallrats mamacita manchest manchester mandarin mandingo mandrake manhatta maradona marathon marauder marcello marcius2 margaret marianne marijuan mariners marines1 marino13 mariposa marjorie marlboro marriage marshall martinez maryjane maryland masamune maserati mash4077 master12 masterbaiting masterbate masterbating masturbation matchbox material matkhau1 matkhau123 matthew1 matthews matthias maverick maxwell1 mazda626 mazdarx7 mccarthy mcdonald mckenzie meatball meathead meatloaf mechanic medicine megadeth megapass megatron melanie1 melissa1 meowmeow mephisto mercedes merchant mercury1 meredith meridian metallic metallica michael1 michael2 michaela michaels michelle michigan microsof microsoft midnight mikemike milamber military millions millwall minemine minimoni ministry minnesot mischief misfit99 mississi missouri mistress mitchell mmmmmmmm mobydick modelsne mohammad mohammed mollydog monalisa money123 moneyman mongoose monkey12 monkeybo monopoly monster1 monsters montana1 montecar monterey montreal montrose moonbeam moonligh moonlight moonshin morpheus morrison mortgage morticia mortimer motherfucker motocros motorola mounta1n mountain mudvayne muffdive mulligan munchkin mushroom musician musicman mustang1 mustang2 mustang5 mustang6 mustangs mwq6qlzo myspace1 myxworld nancy123 napoleon nascar24 natalie1 natasha1 natedogg nathalie nathanie national navyseal ncc1701a ncc1701d ncc1701e ncc74656 nebraska necklace negative nemrac58 netscape nevermin newcastl newcastle newpass6 newyork1 nicetits nicholas nightmar nightowl nightwin nineball nineinch nineteen nintendo nirvana1 nnnnnnnn nocturne nonenone normandy northern nostromo notebook notredam nounours november novifarm nwo4life nygiants nyyankee oblivion obsidian offshore oklahoma oooooooo opendoor operator optimist original outoutout outsider overkill overlord ozlq6qwm p@ssw0rd pa55w0rd pa55word packers1 paintbal paintball painting pakistan paladin1 pallmall palmtree panasoni panasonic pantera1 panther1 panthers papabear papillon paradigm paradise paramedi paranoid pasadena pass1234 passmast passpass passport passthie passw0rd passwor1 password password1 password123 password2 password9 passwords passwort patches1 pathetic pathfind patience patricia patrick1 patriots paulpaul pavement pavilion peaches1 pearljam peekaboo penelope penetrating penetration penguin1 penguins pennywis pentagon penthous perfect1 personal pertinant pescator peterbil peternorth peterpan peterson phaedrus phantom1 pharmacy phialpha philippe phillies phillips phoenix1 pianoman pictuers piercing pimpdadd pimpdaddy pineappl pinetree pingpong pinkfloy pinkfloyd pinnacle pipeline pitchers pizzaman plastics platinum platypus playball playboy1 playboy2 playmate playoffs playstat playstation playtime pleasant pleasure plymouth polopolo poohbear pool6123 poontang poophead pooppoop porkchop porn4life pornking pornographic pornporn porsche1 porsche9 portland portugal poseidon positive postov1000 pounding pppppppp preacher precious predator pregnant prelude1 presario presiden president pressure primetime21 princess princeto pringles printing private1 producer progress property prophecy prospect ptfe3xxp pumpkin1 pumpkins punisher punkrock puppydog pussy123 pussy4me pussycat pussyeat pussyman pxx3eftp python123 q1w2e3r4 qazwsxed qazwsxedc qcmfd454 qqqqqqqq quant4307s question qwer1234 qwerasdf qwerqwer qwert123 qwerty12 qwerty123 qwertyui qwertyuiop qwertzui r2d2c3po rachelle radiohea ragnarok raiders1 railroad rainbow1 rainbow6 rainbows rainyday raistlin randolph rangers1 rapunzel rasputin rasta220 rebecca1 reckless recovery redalert redbaron reddevil reddwarf redheads redlight redshift redskins redstorm redwings reginald register reindeer remember remingto renegade republic research resident revoluti revolver reynolds rhiannon richard1 richards richmond riffraff rightnow riverrat riversid roadkill roadking roadrunn roadster robinson robotech robotics rochelle rockford rockhard rocknrol rockrock rockstar rockwell rolltide rootbeer rootedit rosemary rrrrrrrr rsalinas rt6ytere rush2112 rushmore russell1 rustydog sabrina1 sailboat salasana salesman salvador samadams samantha samsung1 sandberg sandiego sandrine sandwich sanity72 santiago sapphire saratoga satan666 saturday sausages savannah save13tx saxophon scandinavian scarface scarlett scheisse scirocco scissors scoobydo scoobydoo scooter1 scorpio1 scorpion scotland scrabble scrapper screamer screwyou seahawks sealteam sebastia sebastian security seductive seinfeld seminole semperfi senators sentinel sentnece septembe september serenity sergeant services sexsexsex sexybabe sexygirl sexylady sexysexy shadow12 shamrock shanghai shannon1 sheepdog shepherd sheridan sherlock sherwood shitface shithead shitshit shopping showtime sickness sidekick sigmachi silverad simpsons sinclair singapor sinister sithlord sixtynin skeeter1 skinhead skipper1 skittles skydiver skywalke skywalker slamdunk slapnuts slapshot sleeping slimed123 slimshad slipknot slippery slowhand smackdow smartass smashing smeghead smirnoff smithers smoothie snapshot sneakers snickers sniffing snoopdog snowball snowbird snowboar snowboard snowflak snuggles soccer10 soccer11 soccer12 socrates softball softtail software solitude solution somerset somethin something sometime sonyfuck sonysony sooners1 sopranos soulmate southern southpar southpark southpaw spaceman spanking sparhawk sparkles spartan1 spartans speakers special1 specialk spectrum speedway spencer1 spiderma spiderman spitfire splinter spongebo sporting springer sprinter sprocket squerting squirrel srinivas ssptx452 ssssssss stafford stallion standard stanford stanley1 starbuck starcraf starcraft stardust starfire starfish stargate starligh starlite starship starstar startrek starwars steelers stefanie stephane stephani stephanie stephen1 stephens sterling stewart1 stickman stiletto stingray stirling stocking stockton stonecol stonecold stonewal stoppedby straight stranger strawber streaming strength stripper suburban success1 suckcock suckdick sullivan summer69 summer99 sundance sundevil sunflowe sunlight sunnyday sunshine superfly superior superman supernov supersta superstar surprise surveyor survival survivor svetlana sweetnes sweetness sweetpea swimming swingers swinging swordfis swordfish sylveste syracuse tacobell tailgate takehana talisman tampabay tangerin tarheels tazmania technics techniques teddybea telephon temppass temptress tennesse terminal terminat terrapin test1234 testerer testibil testing1 testpass testtest thailand thanatos thankyou thedoors theforce thegreat thematri theodore therock1 thething thetruth thinking thirteen thisisit thompson thrasher threesom thriller thuglife thumbnils thumper1 thunder1 thunderb thursday tiberius tickling ticklish tiffany1 tiger123 tigercat tinkerbe titanium titleist tmjxn151 together tomahawk tommyboy tomorrow toonarmy toriamos tottenha tottenham touching trailers training transexual transfer traveler treasure treefrog triangle trinidad trinitro trinity1 trombone trooper1 tropical trouble1 troubles trousers trucking trueblue truelove trumpet1 trustno1 tttttttt tunafish turkey50 twilight ultimate umbrella unbelievable uncencored underdog undertak undertaker undertow underwear universa universe university ursitesux username usmarine uuuuuuuu vacation vagabond valdepen valencia valentin valhalla valkyrie valleywa vampire1 vampires vancouve vanessa1 vanguard vanhalen vauxhall velocity verbatim veronica veronika verygood victoria viewsoni vikings1 vincent1 violator vipergts virginia virginie vivitron vladimir volkswag volleyba voyager1 vvvvvvvv wanderer wapapapa warcraft wareagle warhamme warrior1 warriors washburn washingt washington watching waterboy waterfal waterloo waterman waterski webmaste webmaster wednesda wednesday welcome1 wellingt werewolf westside westwood wetpussy wg8e3wjf whatever whatwhat whiplash whiskers whistler whiteboy whiteout whitesox whocares wildbill wildcard wildcats wildfire wildstar wildwood william1 williams windmill windows1 windsurf winfield wingchun winston1 winter99 wireless wishbone wolfgang wolfpack wolverin wolverine wonderboy wonderfu woodland woodstoc woodwork woofwoof wordpass wp2003wp wrangler wrestler wrestlin wrestling wrinkle1 wrinkle5 wwwwwwww xxxxxxx1 xxxxxxxx yamahar1 yankees1 yankees2 yeahbaby yeahyeah year2005 yesterda yogibear yosemite yqlgr667 yvtte545 yy5rbfsc yyyyyyyy zachary1 zanzibar zaq12wsx zaq1xsw2 zeppelin zerocool zildjian zoomzoom zxcvbnm1 zzzzzzzz".split(" "));
+function passwordProblem(pw, again) {
+  if (/[^\x20-\x7e]/.test(pw)) return "No Vietnamese accents in the password (â, ă, đ, ê, ô, ơ, ư…). Turn off Vietnamese typing (Unikey) and type it again.";
+  if (pw.length < 8) return "At least 8 characters.";
+  if (COMMON_PW.has(pw.toLowerCase())) return "This password is too common. Choose another one.";
+  if (again != null && pw !== again) return "The two passwords are not the same.";
+  return "";
+}
+const USERNAME_OK = /^[a-z0-9._]{3,20}$/;
+function usernameProblem(u) { return USERNAME_OK.test(u) ? "" : "Username: 3–20 letters a–z, numbers, . or _ (no accents, no spaces)."; }
+const accCrypto = typeof crypto !== "undefined" && crypto.subtle;
+
+// ---------------------------------------------------------------- cards (Exercises page) and the boxes of every form
+function accCard(html) {
+  document.querySelectorAll(".lay-start").forEach(x => x.remove());
+  const box = document.createElement("div"); box.className = "lay-start";
+  box.innerHTML = `<div class="lay-card acc-card">${html}</div>`;
+  document.body.append(box);
+  addEyes(box); addPwRules(box);
+  const f = box.querySelector("input"); if (f) f.focus();
+  return box;
+}
+// (2 Nov, Ngoc) the password rules as a list under the boxes, checked while typing: green ✓ when met, red ✗ when not
+// (Sign up and New password; the same rules as passwordProblem, which still checks on Sign up)
+function addPwRules(box) {
+  const p = box.querySelector("#acc-p"), p2 = box.querySelector("#acc-p2");
+  if (!p || !p2) return;
+  const ul = document.createElement("ul"); ul.className = "acc-rules"; ul.setAttribute("aria-live", "polite");
+  const rules = [["At least 8 characters", a => a.length >= 8],
+    ["No Vietnamese accents (â, ă, đ, ê, ô, ơ, ư…)", a => !!a && !/[^\x20-\x7e]/.test(a)],
+    ["Not a common password (like 12345678)", a => a.length >= 8 && !COMMON_PW.has(a.toLowerCase())],
+    ["The two passwords are the same", (a, b) => !!a && a === b]];
+  // (3 Nov, Ngoc: "tùm lum") the list shows once a password box is used; the advice is its last line (was a line of its own)
+  const tip = "Not a password you use somewhere else";
+  // (2 Nov, Ngoc: "nothing is wrong yet, why ✗?") before the first try: a rule met is green ✓, one not met yet is grey •;
+  // after Sign up / Set the new password was pressed, a rule not met is red ✗
+  let tried = false;
+  const draw = () => { ul.innerHTML = rules.map(([t, ok]) => { const y = ok(p.value, p2.value), k = y ? "ok" : tried ? "no" : "todo";
+    return `<li class="${k}"><span aria-hidden="true">${{ ok: "✓", no: "✗", todo: "•" }[k]}</span> ${accEsc(t)}<span class="sr">${y ? " (done)" : " (not yet)"}</span></li>`; }).join("")
+    + `<li class="todo"><span aria-hidden="true">•</span> ${accEsc(tip)}</li>`; };
+  p2.closest("label").after(ul);
+  ul.hidden = true; const open = () => { ul.hidden = false; };
+  [p, p2].forEach(x => { x.addEventListener("input", draw); x.addEventListener("focus", open); });
+  const f = p.closest("form"); if (f) f.addEventListener("submit", () => { tried = true; open(); draw(); });
+  draw();
+}
+// (2 Nov, Ngoc) a "Show" button on every password box, to see what was typed (hidden again by a second click);
+// hidden by default (a computer in a classroom: the neighbours see the screen)
+function addEyes(box) {
+  box.querySelectorAll('input[type="password"]').forEach(inp => {
+    const wrap = document.createElement("span"); wrap.className = "acc-pw";
+    inp.replaceWith(wrap); wrap.append(inp);
+    const b = document.createElement("button"); b.type = "button"; b.className = "acc-eye"; b.textContent = "Show";
+    b.setAttribute("aria-label", "Show the password"); b.setAttribute("aria-pressed", "false");
+    b.onclick = () => { const show = inp.type === "password"; inp.type = show ? "text" : "password";
+      b.textContent = show ? "Hide" : "Show"; b.setAttribute("aria-pressed", String(show));
+      b.setAttribute("aria-label", show ? "Hide the password" : "Show the password"); inp.focus(); };
+    wrap.append(b);
+  });
+}
+const accVal = (box, id) => (box.querySelector("#" + id) || {}).value || "";
+function accSay(box, text) { const e = box.querySelector(".acc-msg"); if (e) { e.textContent = text; e.hidden = !text; } }
+function accBusy(box, on, text) { box.querySelectorAll("button").forEach(b => b.disabled = on); if (on) accSay(box, text || "Please wait…"); }
+function recoveryCard(code, title, then) {
+  const box = accCard(`<h2>${accEsc(title)}</h2><p>Your recovery code:</p><p class="acc-code">${accEsc(code)}</p>`
+    + `<p>Write it down. If you forget your password, this code lets you choose a new one. It is shown only now.</p>`
+    + `<button type="button" id="acc-ok">I wrote it down</button>`);
+  box.querySelector("#acc-ok").onclick = () => { box.remove(); then && then(); };
+}
+const isGuest = () => { try { return localStorage.getItem(GUEST_KEY) === "1"; } catch (e) { return false; } };
+function setGuest(on) { try { on ? localStorage.setItem(GUEST_KEY, "1") : localStorage.removeItem(GUEST_KEY); } catch (e) {} }
+
+// ---------------------------------------------------------------- preferences (Settings), kept in this browser
+// Theme: system / light / dark (every page reads data-theme on <html>); text size: normal / large; language: English
+// (Tiếng Việt: coming soon — 2 Nov, Ngoc: the button first, the translation later)
+const pref = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
+const setPref = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+function applyPrefs() {
+  const t = pref("tracer-theme", "system"), r = document.documentElement;
+  if (t === "system") r.removeAttribute("data-theme"); else r.setAttribute("data-theme", t);
+  r.setAttribute("data-size", pref("tracer-size", "normal"));
+}
+applyPrefs();
+
+// ---------------------------------------------------------------- the top bar (2 Nov, Ngoc: as Airbnb / Netflix)
+function hereNext() { const p = location.pathname.split("/").pop() || "about.html"; return /^[\w-]+\.html$/.test(p) ? p : "next.html"; }
+function hdrDraw() {
+  const right = document.getElementById("hdr-right"); if (!right) return;
+  const dash = document.getElementById("nav-dash"); if (dash) dash.hidden = !(account && account.role === "teacher");
+  // (4 Nov, e: cách H) My progress is a tab of the bar (before: in the account menu), for everyone but a teacher; on the
+  // Exercises page the page itself says when (next_continue.js mpNav: Feedback on, the student view)
+  const prog = document.getElementById("nav-prog"); if (prog && !document.querySelector('[aria-label="Exercise"]')) prog.hidden = !!(account && account.role === "teacher");
+  const onSignin = /signin\.html$/.test(location.pathname);
+  const lang = `<div class="hdr-dd hdr-langdd"><button type="button" class="hdr-btn" data-dd="lang" aria-haspopup="menu" aria-expanded="false" aria-label="Language: English">🌐 <span class="hdr-lang">English</span> ▾</button>
+    <div class="hdr-menu" role="menu" hidden><button type="button" role="menuitemradio" aria-checked="true" class="hdr-it">✓ English</button>
+    <button type="button" role="menuitemradio" aria-checked="false" class="hdr-it" disabled>Tiếng Việt <span class="hdr-soon">coming soon</span></button></div></div>`;
+  let me;
+  if (!account) me = onSignin ? "" : `<a class="hdr-signin" href="signin.html?next=${encodeURIComponent(hereNext())}">Sign in</a>`
+    + `<div class="hdr-dd"><button type="button" class="hdr-btn hdr-icon" data-dd="me" aria-haspopup="menu" aria-expanded="false" aria-label="Menu">☰</button>
+      <div class="hdr-menu" role="menu" hidden>${onSignin ? "" : `<a role="menuitem" class="hdr-it" href="signin.html?next=${encodeURIComponent(hereNext())}">Log in or sign up</a><hr>`}
+      <button type="button" role="menuitem" class="hdr-it" data-act="settings">⚙ Settings</button><a role="menuitem" class="hdr-it" href="about.html#how">? Help</a></div></div>`;
+  else {
+    const ini = (account.name || account.username || "?").trim().charAt(0).toUpperCase();
+    me = `<div class="hdr-dd"><button type="button" class="hdr-btn hdr-me" data-dd="me" aria-haspopup="menu" aria-expanded="false" aria-label="Account menu"><span class="hdr-av">${accEsc(ini)}</span><span class="hdr-role">${account.role === "teacher" ? "Teacher" : "Student"}</span> ▾</button>
+      <div class="hdr-menu" role="menu" hidden>
+        <div class="hdr-who"><b>${accEsc(account.name)}</b><span>${accEsc(account.username)}${account.cls ? " · class " + accEsc(account.cls) : ""}${account.role === "teacher" ? " · teacher" : ""}</span></div><hr>
+        ${account.role === "teacher" ? `<a role="menuitem" class="hdr-it" href="dashboard.html">Dashboard</a>`      // (2 Nov, Ngoc) a teacher has no progress and joins no class
+          : `<button type="button" role="menuitem" class="hdr-it" data-act="join">${account.cls ? "Change class" : "Join a class"}</button>`}<hr>
+        <button type="button" role="menuitem" class="hdr-it" data-act="settings">⚙ Settings</button>
+        <a role="menuitem" class="hdr-it" href="about.html#how">? Help</a><hr>
+        <button type="button" role="menuitem" class="hdr-it" data-act="logout">Log out</button></div></div>`;
+  }
+  right.innerHTML = lang + me;
+}
+function hdrCloseMenus(except) {
+  document.querySelectorAll(".hdr-dd").forEach(d => { if (d === except) return; const m = d.querySelector(".hdr-menu"), b = d.querySelector("[data-dd]");
+    if (m) m.hidden = true; if (b) b.setAttribute("aria-expanded", "false"); });
+}
+document.addEventListener("click", ev => {
+  const t = ev.target.closest("[data-dd]");
+  if (t) { const d = t.closest(".hdr-dd"), m = d.querySelector(".hdr-menu"); hdrCloseMenus(d); m.hidden = !m.hidden; t.setAttribute("aria-expanded", String(!m.hidden)); return; }
+  const a = ev.target.closest("[data-act]");
+  if (a && a.closest(".hdr-menu")) { hdrCloseMenus(); ({ settings: settingsDialog, join: joinDialog, logout: hdrLogout })[a.dataset.act](); return; }
+  if (!ev.target.closest(".hdr-menu")) hdrCloseMenus();
+});
+document.addEventListener("keydown", ev => { if (ev.key === "Escape") { hdrCloseMenus(); document.querySelectorAll(".hdr-dlg").forEach(x => x.remove()); } });
+// Log out: the Exercises page also forgets the progress kept on this computer (it is on the Sheet), then Sign in
+function hdrLogout() {
+  if (typeof logOut === "function") return logOut();
+  if (account) api("logout", {}).catch(() => {});
+  account = null; storeAccount();
+  try { const p = JSON.parse(localStorage.getItem(PROGRESS_LS) || "null"); if (p && p.user) localStorage.removeItem(PROGRESS_LS); } catch (e) {}
+  location.href = "signin.html";
+}
+// a small window over the page (Settings, Join a class)
+function hdrDialog(title, html) {
+  document.querySelectorAll(".hdr-dlg").forEach(x => x.remove());
+  const box = document.createElement("div"); box.className = "hdr-dlg lay-start";
+  box.innerHTML = `<div class="lay-card acc-card" role="dialog" aria-modal="true" aria-label="${accEsc(title)}"><div class="hdr-dlgtop"><h2>${accEsc(title)}</h2><button type="button" class="hdr-x" aria-label="Close">✕</button></div>${html}</div>`;
+  document.body.append(box); addEyes(box);
+  box.querySelector(".hdr-x").onclick = () => box.remove();
+  box.addEventListener("click", e => { if (e.target === box) box.remove(); });
+  const f = box.querySelector("input, button:not(.hdr-x)"); if (f) f.focus();
+  return box;
+}
+function settingsDialog() {
+  const radios = (name, cur, opts) => opts.map(([v, t, dis]) => `<label class="acc-check"><input type="radio" name="${name}" value="${v}"${v === cur ? " checked" : ""}${dis ? " disabled" : ""}> ${t}</label>`).join("");
+  const box = hdrDialog("Settings", `<div class="hdr-set"><h3>Theme</h3>${radios("theme", pref("tracer-theme", "system"), [["system", "Same as my computer"], ["light", "Light"], ["dark", "Dark"]])}
+    <h3>Text size</h3>${radios("size", pref("tracer-size", "normal"), [["normal", "Normal"], ["large", "Large"]])}
+    <h3>Language</h3>${radios("lang", "en", [["en", "English"], ["vi", "Tiếng Việt <span class=\"hdr-soon\">coming soon</span>", true]])}
+    ${account ? `<h3>Account</h3><div class="acc-row"><button type="button" class="ghost" id="set-rec">New recovery code</button><button type="button" class="ghost" id="set-del">Delete my account</button></div>` : ""}
+    <p class="acc-msg" hidden></p></div>`);
+  box.querySelectorAll('input[name="theme"]').forEach(r => r.onchange = () => { setPref("tracer-theme", r.value); applyPrefs(); });
+  box.querySelectorAll('input[name="size"]').forEach(r => r.onchange = () => { setPref("tracer-size", r.value); applyPrefs(); });
+  if (!account) return;
+  const askPw = (title, go) => {
+    const b2 = hdrDialog(title, `<form class="acc-form"><label>Your password<input id="acc-p" type="password" autocomplete="current-password"></label>
+      <button type="submit">Continue</button><p class="acc-msg" hidden></p></form>`);
+    b2.querySelector("form").addEventListener("submit", async e => {
+      e.preventDefault(); accBusy(b2, true);
+      try { const s = await api("salt", { username: account.username }); await go(b2, await passKey(accVal(b2, "acc-p"), s.salt)); }
+      catch (err) { accBusy(b2, false); accSay(b2, "Could not reach the server (internet?)."); }
+    });
+  };
+  box.querySelector("#set-rec").onclick = () => askPw("New recovery code", async (b2, key) => {
+    const r = await api("newRecovery", { key }); accBusy(b2, false);
+    if (!r.ok) return accSay(b2, "Wrong password.");
+    b2.remove(); recoveryCard(r.recovery, "Your new recovery code", null);
+  });
+  box.querySelector("#set-del").onclick = () => askPw("Delete my account", async (b2, key) => {
+    accBusy(b2, false);
+    if (!b2.dataset.sure) { b2.dataset.sure = "1"; accSay(b2, "Your account and your progress will be deleted. Click Continue again to delete."); return; }
+    accBusy(b2, true);
+    const r = await api("deleteAccount", { key }); accBusy(b2, false);
+    if (!r.ok) return accSay(b2, "Wrong password.");
+    account = null; storeAccount(); try { localStorage.removeItem(PROGRESS_LS); } catch (e) {}
+    location.href = "signin.html?deleted=1";
+  });
+}
+function joinDialog() {
+  const box = hdrDialog(account.cls ? "Change class" : "Join a class", `<form class="acc-form"><label>Class code <span class="muted">(from your teacher)</span>
+    <input id="acc-c" value="${accEsc(account.cls || "")}" autocapitalize="characters" spellcheck="false" placeholder="K7QM-28"></label>
+    <button type="submit">Save</button><p class="acc-msg" hidden></p>${account.cls ? `<p class="acc-small"><button type="button" class="acc-link" id="acc-leave">Leave the class</button></p>` : ""}</form>`);
+  const go = async cls => {
+    accBusy(box, true);
+    try {
+      const r = await api("joinClass", { cls }); accBusy(box, false);
+      if (r.ok) { account = { ...account, ...r.account }; storeAccount(); hdrDraw(); box.remove(); return; }
+      accSay(box, r.error === "closed" ? "This class is closed: ask your teacher." : r.error === "class" ? "There is no class with this code. Check it." : "Could not save. Log in again?");
+    } catch (err) { accBusy(box, false); accSay(box, "Could not reach the server (internet?)."); }
+  };
+  box.querySelector("form").addEventListener("submit", e => { e.preventDefault(); const c = accVal(box, "acc-c").trim(); if (!c) return accSay(box, "Type the code your teacher gave you."); go(c); });
+  const lv = box.querySelector("#acc-leave"); if (lv) lv.onclick = () => go("");
+}
+
+(function () {
+  // inside a frame (How it works shown in About): no top bar
+  if (window.top !== window.self) { const st = document.createElement("style"); st.textContent = ".sitenav { display: none !important; }"; document.head.append(st); }
+  const st = document.createElement("style");
+  st.textContent = `.acc-card { gap: 10px; } .acc-card label { display: grid; gap: 4px; font-size: 14px; color: var(--ink); }
+.acc-card .acc-check { display: flex; gap: 8px; align-items: center; } .acc-card .acc-check input { width: auto; }
+.acc-form { display: grid; gap: 10px; }
+/* (2 Nov) the boxes of the start cards in a font with every Vietnamese letter: the mono font (next_theme.js, input:not(#tester)) drew "Nguyễn" as "Nguyêñ" */
+.lay-card input:not(#tester) { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif !important; }
+.acc-rules { list-style: none; margin: -2px 0 0; padding: 0; display: grid; gap: 2px; font-size: 13px; }
+.acc-rules li { display: flex; gap: 6px; } .acc-rules li.ok { color: var(--ok, #1e7a3c); } .acc-rules li.no { color: var(--bad, #b3261e); } .acc-rules li.todo { color: var(--muted); }
+.acc-rules[hidden], .acc-card label[hidden] { display: none; }
+.acc-rules .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.acc-pw { position: relative; display: block; } .acc-pw input { width: 100%; box-sizing: border-box; padding-right: 64px; }
+.acc-card .acc-eye { all: unset; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 13px; color: var(--accent); padding: 2px 6px; border-radius: 6px; }
+.acc-card .acc-eye:focus-visible { outline: 2px solid var(--accent); }
+.acc-tabs { display: flex; gap: 6px; } .acc-tabs button { flex: 1; background: var(--surface) !important; color: var(--ink) !important; border: 1px solid var(--line) !important; font-weight: 400 !important; }
+.acc-tabs button[aria-pressed="true"] { border-color: var(--accent) !important; box-shadow: inset 0 -2px 0 var(--accent); font-weight: 700 !important; }
+.acc-card .acc-link { all: unset; cursor: pointer; color: var(--accent); text-decoration: underline; font-size: 14px; }
+.acc-card .ghost { background: var(--surface) !important; color: var(--ink) !important; border: 1px solid var(--line) !important; }
+.acc-row { display: flex; gap: 8px; } .acc-row button { flex: 1; }
+.acc-small { font-size: 14px; margin: 0; text-align: center; } .acc-guest { display: grid; gap: 6px; margin: 0; } #acc-guest { width: 100%; background: var(--surface) !important; color: var(--ink) !important; border: 1px solid var(--line) !important; font-weight: 600 !important; } .acc-guest p { margin: 0; text-align: center; font-size: 13px; }
+.acc-or { display: flex; align-items: center; gap: 10px; margin: 6px 0 2px; color: var(--muted); font-size: 13px; } .acc-or::before, .acc-or::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+.acc-msg { color: var(--bad, #b3261e) !important; font-size: 14px; }
+.acc-code { font-family: var(--f-mono, monospace); font-size: 28px; letter-spacing: 2px; text-align: center; color: var(--ink) !important; margin: 4px 0 !important; }
+.acc-banner { position: sticky; top: 0; z-index: 50; padding: 10px 16px; background: #fff4d6; color: #4a3b00; border-bottom: 1px solid #e8d48a; text-align: center; }
+.acc-banner .btn { margin-left: 8px; } .acc-banner.view { background: var(--accent-soft, #e7ecf7); color: var(--ink); border-color: var(--line); }
+.acc-outp { margin: 2px 0 0; } .acc-outbtn { all: unset; cursor: pointer; font-size: 13px; color: inherit; text-decoration: underline; opacity: .8; }
+.acc-outbtn:hover { opacity: 1; } .acc-outbtn:focus-visible { outline: 2px solid var(--accent); }
+.acc-save { font-size: 12px; color: var(--muted); margin: 2px 0 0; } .acc-save.bad { color: var(--bad, #b3261e); }
+.side-head .acc-save.bad { color: #fff; background: rgba(179, 38, 30, .85); display: inline-block; padding: 1px 8px; border-radius: 6px; }  /* readable on the navy head */
+.mpcommon { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); } .mpcommon h3 { margin: 0 0 6px; font-size: 16px; }
+.mpcommon ul { margin: 0 0 6px; padding-left: 20px; } .mpcommon .muted { font-size: 13px; color: var(--muted); margin: 0; }
+.lay-start { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: color-mix(in srgb, var(--paper, var(--bg, #fafbfd)) 94%, transparent); overflow: auto; }
+.lay-card { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 26px 30px; display: grid; gap: 12px; width: min(420px, 90vw); box-shadow: 0 10px 40px rgba(0,0,0,.1); font-family: var(--f-body, system-ui, sans-serif); }
+.lay-card h2 { margin: 0; font-size: 24px; } .lay-card p { margin: 0; color: var(--muted); }
+.lay-card input { font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.lay-card button { font: inherit; font-weight: 700; padding: 10px; border: 0; border-radius: 8px; background: var(--accent); color: var(--surface); cursor: pointer; }
+.lay-card button:disabled { opacity: .6; cursor: default; }
+.hdr-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.hdr-role { font-size: 13px; font-weight: 600; color: var(--muted); margin-left: 6px; }   /* (3 Nov, Ngoc: "chỉ ra bản thân là ai") */
+@media (max-width: 430px) { .hdr-role { display: none; } }
+.hdr-dd { position: relative; }
+.sitenav .hdr-btn { font: inherit; font-size: 15px; cursor: pointer; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.sitenav .hdr-btn:hover { background: var(--line); }
+.sitenav .hdr-me { padding: 3px 10px 3px 3px; display: inline-flex; gap: 6px; align-items: center; }
+.hdr-av { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--surface); font-weight: 700; }
+.sitenav a.hdr-signin { background: var(--accent); color: var(--surface); font-weight: 700; padding: 7px 16px; border-radius: 8px; box-shadow: none; }
+.sitenav a.hdr-signin:hover { color: var(--surface); opacity: .9; background: var(--accent); }
+.hdr-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 70; min-width: 230px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.15); padding: 6px; display: grid; text-align: left; }
+.hdr-menu hr { border: 0; border-top: 1px solid var(--line); margin: 6px 0; width: 100%; }
+.sitenav .hdr-menu .hdr-it, .hdr-menu .hdr-it { all: unset; display: block; padding: 8px 12px; border-radius: 8px; cursor: pointer; color: var(--ink); font-size: 15px; box-shadow: none; }
+.hdr-menu .hdr-it:hover, .hdr-menu .hdr-it:focus-visible { background: var(--line); }
+.hdr-menu .hdr-it:disabled { color: var(--muted); cursor: default; background: none; }
+.hdr-soon { font-size: 12px; color: var(--muted); }
+.hdr-who { padding: 8px 12px; display: grid; } .hdr-who span { font-size: 13px; color: var(--muted); }
+.hdr-dlgtop { display: flex; align-items: center; justify-content: space-between; }
+.lay-card .hdr-x { all: unset; cursor: pointer; font-size: 18px; color: var(--muted); padding: 4px 8px; border-radius: 6px; }
+.hdr-set { display: grid; gap: 6px; } .hdr-set h3 { margin: 8px 0 0; font-size: 15px; }
+.acc-card .muted { color: var(--muted); }
+html[data-size="large"] body { zoom: 1.15; }`;
+  document.head.append(st);
+  hdrDraw();
+})();
+
+</script>
+
+<div class="wrap">
+  <div class="head"><h1>Dashboard</h1><span class="fresh" id="fresh"></span><span id="pick"></span><span id="newbtn"></span></div>
+  <p id="testmode" class="testmode" hidden>Test mode: everyone can see everyone.</p>
+  <nav class="dtabs" id="dtabs" aria-label="Dashboard parts"><a href="#overview" data-tab="overview">Overview</a><a href="#learners" data-tab="learners">Learners</a><a href="#mistakes" data-tab="mistakes">Mistakes</a><a href="#app" data-tab="app">How the app did</a></nav>
+  <div id="main"><p class="muted">Loading…</p></div>
+</div>
+<script>
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbz32AkhygZzRsIYVz7N_DZ7d-VyvCgYF0dKh0knPb9X0O1DHCTl-lTn94TS1EVBS7YLMw/exec";
+const $ = id => document.getElementById(id);
+const esc = t => String(t == null ? "" : t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+// (2 Nov) everything shown here was written by learners' browsers: no new script may run on this page (the page's own
+// code uses no inline handlers); every value from a summary is escaped or made a number
+(() => { const m = document.createElement("meta"); m.httpEquiv = "Content-Security-Policy";
+  m.content = "script-src 'none'; object-src 'none'; base-uri 'none'"; document.head.append(m); })();
+const DAY = 864e5;   // (3 Nov, Ngoc) no "inactive" any more: finished learners and a weekly class were flagged
+const TABS = ["overview", "learners", "mistakes", "app"];   // (5 Nov night, Ngoc) "app": How the app did, for the thesis
+let state = { cls: "", names: "auto", data: null, at: 0, filter: "", tab: (location.hash.replace("#", "") || "overview") };
+if (!TABS.includes(state.tab)) state.tab = "overview";
+addEventListener("hashchange", () => { const t = location.hash.replace("#", ""); if (TABS.includes(t)) { state.tab = t; if (state.data) draw(); if (!backTo()) window.scrollTo({ top: 0 }); } });
+// (4 Nov, chat 9, Ngoc: "ấn x thì nó ở tab learner luôn") ✕ on "Showing: …": back to the tab where "Who?" was clicked, at that mistake
+function backTo() {
+  const k = state.back; state.back = null; if (!k) return false;
+  const d = [...document.querySelectorAll("details.mi[data-key]")].find(x => x.dataset.key === k);
+  const b = d || ([...document.querySelectorAll("[data-filter]")].find(x => x.dataset.filter === k) || {}).parentElement;
+  if (!b) return false;
+  if (d) d.open = true;
+  b.scrollIntoView({ block: "center" }); return true;
+}
+try { const n = localStorage.getItem("dash-names"); state.names = n === null ? "auto" : n === "1"; state.cls = localStorage.getItem("dash-cls") || ""; } catch (e) {}
+
+async function load() {
+  if (!account) { $("main").innerHTML = forTeachers(true); return; }
+  const ck = "dash-last:" + account.username + ":" + state.cls;
+  try { const old = JSON.parse(sessionStorage.getItem(ck) || "null"); if (old && !state.data) { state.data = old.r; state.at = old.at; draw(); } } catch (e) {}
+  $("fresh").innerHTML = `Updating…`;
+  let r;
+  try { r = await api("dashboard", { cls: state.cls }); }
+  catch (e) { freshLine("Could not reach the server (internet?)"); if (!state.data) $("main").innerHTML = `<div class="card"><p>Could not reach the server (internet?).</p></div>`; return; }
+  if (r.error === "auth") { $("main").innerHTML = `<div class="card"><p>Please <a href="signin.html?next=dashboard.html">sign in</a> again.</p></div>`; return; }
+  if (!r.ok) { $("main").innerHTML = `<div class="card"><p>Something went wrong (${esc(r.error)}).</p></div>`; return; }
+  state.data = r; state.at = Date.now(); draw();
+  // (3 Nov, Ngoc: B) a learner opened it: only what the page is (test mode: the card on top of what everyone can see)
+  if (r.role !== "teacher") { if (r.testMode || r.admin) $("main").insertAdjacentHTML("afterbegin", forTeachers(false)); else $("main").innerHTML = forTeachers(false); }
+  try { sessionStorage.setItem(ck, JSON.stringify({ r, at: state.at })); } catch (e) {}
+}
+function ago(t) {
+  const d = Math.floor((Date.now() - t) / DAY);
+  return d <= 0 ? "today" : d === 1 ? "yesterday" : `${d} days ago`;
+}
+function when(v) { const t = v ? new Date(v).getTime() : NaN; return isFinite(t) ? t : null; }
+function freshLine(extra) {
+  const m = state.at ? Math.max(0, Math.round((Date.now() - state.at) / 60000)) : null;
+  $("fresh").innerHTML = (extra ? `${esc(extra)} · ` : "") + (m == null ? "" : m === 0 ? "Updated just now" : `Updated ${m} min ago`) + ` <button type="button" class="btn sm" id="refresh">↻ Refresh</button>`;
+  $("refresh").onclick = () => load();
+}
+setInterval(() => { if (state.at && $("refresh")) freshLine(); }, 60000);
+
+// one learner, as the page reads it (old summaries without a state: seen in 1 exercise = once, in 2+ = still)
+function learnerView(l) {
+  const s = l.summary || null, ex = s && Array.isArray(s.ex) ? s.ex : [];
+  const ms = s && Array.isArray(s.mistakes) ? s.mistakes.map(m => ({ m: String(m.m), words: String(m.words || m.m), ex: [].concat(m.ex || []).map(String),
+    last: String(m.last || [].concat(m.ex || []).slice(-1)[0] || ""), since: String(m.since || ""),
+    // (5 Nov) "correct later" needs 2 right in a row; a summary saved before (one was enough) with one right is read
+    // as "correct 1 of 2" in its old column (seen once / repeated)
+    rights: (r => r.length ? r : m.state === "fixed" && m.since ? [String(m.since)] : [])([].concat(m.rights || []).map(String)),
+    state: (st => st === "fixed" && !(Array.isArray(m.rights) && m.rights.length >= 2) ? ([].concat(m.ex || []).length >= 2 ? "still" : "once") : st)
+      (["still", "fixed", "once"].includes(m.state) ? m.state : [].concat(m.ex || []).length >= 2 ? "still" : "once"),
+    asked: m.a != null ? !!Number(m.a) : [].concat(m.ex || []).length >= 2 || [].concat(m.rights || []).length >= 1,   // (5 Nov night) old summaries: seen again or correct since
+    occ: [].concat(m.occ || []).map(o => ({ ex: String(o.ex), line: Number(o.line) || null, typed: String(o.typed || ""), right: String(o.right || "") })) })) : [];
+  const last = when(l.updated), done = s ? Number(s.done) || 0 : 0;
+  // (3 Nov, Ngoc) two reasons only, each with its exercises: the same mistake again (a misconception "repeated"), and
+  // an exercise still wrong at the end after the answer (✗), until a later line of the same kind is right at once (rule c).
+  // Not started and inactive are not reasons.  Old summaries without "wrong": every ✗ exercise counts.
+  const again = [...new Set(ms.filter(m => m.state === "still").flatMap(m => m.ex))];
+  const wrongs = s && Array.isArray(s.wrong) ? s.wrong.filter(w => !w.since).map(w => String(w.ex)) : ex.filter(x => x.k === "bad").map(x => String(x.n));
+  const why = [];
+  if (again.length) why.push("again");
+  if (wrongs.length) why.push("answer");
+  const other = s && Array.isArray(s.other) ? s.other.map(o => ({ ex: String(o.ex), line: Number(o.line) || null, typed: String(o.typed || ""), right: String(o.right || ""), why: oldStatus(String(o.why || "")) ? "" : WHY_NOW[String(o.why || "")] || String(o.why || ""), slip: !!o.slip })) : [];
+  const progs = {}; if (s && s.progs && typeof s.progs === "object") Object.keys(s.progs).slice(0, 60).forEach(k => { if (typeof s.progs[k] === "string") progs[String(k)] = s.progs[k].slice(0, 3000); });
+  // (5 Nov night) each wrong line with help (next_track.js lineTrack); a summary saved before has none: null
+  const lines = s && Array.isArray(s.lines) ? s.lines.slice(0, 200).map(x => ({ h: String(x.h), f: Number(x.f) || 0, k: x.k == null ? null : Number(x.k) || 0, t: String(x.t) })) : null;
+  return { l, s, ex, ms, other, progs, lines, last, done, total: s ? Number(s.total) || 8 : 8, why, again, wrongs, created: when(l.created) };
+}
+const WHY = { again: v => `Same mistake again (ex ${v.again.join(", ")})`, answer: v => `Wrong after being given the answer (ex ${v.wrongs.join(", ")})` };
+// (3 Nov, Ngoc: D) (5 Nov) one right after the mistake: "seen once: ex 3 · correct 1 of 2: ex 4"
+const STATE = m => m.state === "fixed" ? `fixed: correct in ex ${(m.rights.length ? m.rights : [m.since]).join(", ")}`
+  : (m.state === "still" ? `repeated: ex ${m.ex.join(", ")}` : `seen once: ex ${m.last}`) + (m.rights.length === 1 ? ` · correct once (ex ${m.rights[0]}), 1 more needed` : "");
+
+// (3 Nov, Ngoc: B, the Dashboard button stays for everyone) not a teacher: what the page is and how to get one
+function forTeachers(guest) {
+  if (!document.getElementById("ftcss")) document.head.insertAdjacentHTML("beforeend", `<style id="ftcss">.ft a.btn { text-decoration: none; }</style>`);
+  return `<div class="card ft"><h2>The Dashboard is for teachers</h2><p>A teacher makes a class, gives its code to the learners, and sees here how each learner is doing.</p>`
+    + `<p><a class="btn main" href="signin.html?tab=signup&teacher=1&next=dashboard.html${guest ? "" : "&switch=1"}">Sign up as a teacher</a>${guest ? ` <a class="btn" href="signin.html?next=dashboard.html">Log in</a>` : ""}</p>`
+    + `${guest ? "" : `<p class="small muted">You are logged in as a learner: a teacher account is a new account.</p>`}</div>`;
+}
+function draw() {
+  const r = state.data, teacher = r.role === "teacher";
+  if (state.names === "auto") state.names = teacher;
+  $("testmode").hidden = !r.testMode && !r.admin;
+  $("testmode").textContent = r.testMode ? "Test mode: everyone can see everyone." : "Admin: you see every class.";   // (4 Nov) ADMINS in the script
+  freshLine();
+  // the class picker and New class, in the head
+  const opts = (r.testMode || r.admin ? [`<option value="">Everyone</option>`] : []).concat(r.classes.map(c => `<option value="${esc(c.code)}"${state.cls === c.code ? " selected" : ""}>Class ${esc(c.code)}${c.own === false ? ` · ${esc(c.teacher)}` : ""}</option>`));
+  $("pick").innerHTML = opts.length ? `<select id="clssel" aria-label="Class">${opts.join("")}</select>` : "";
+  $("newbtn").innerHTML = teacher ? `<button class="btn main" type="button" id="newcls">+ New class</button>` : "";
+  const V = r.learners.map(learnerView).sort((a, b) => (b.why.length - a.why.length) || (!a.done - !b.done) || a.l.name.localeCompare(b.l.name, "vi"));
+  const nameOf = (v, i) => state.names ? esc(v.l.name) : `Learner ${i + 1}`;
+  V.forEach((v, i) => { v.label = nameOf(v, i); });
+  let html = "";
+  const m = state.msg;
+  if (m) html += m.ok ? `<p class="okmsg" role="status">✓ Class <b class="code">${esc(m.code)}</b> is ready. Give this code to your learners.</p>` : `<p class="badmsg" role="alert">✗ ${esc(m.text)}</p>`;
+  const cls = r.classes.find(c => c.code === state.cls) || (!r.testMode && !r.admin && r.classes[0]) || null;
+  if (teacher && !r.classes.length && state.tab === "overview") html += `<div class="card"><h2>No class yet</h2><p class="muted">Make one with <b>+ New class</b>: a code is made for you, give it to the learners.</p></div>`;
+  if (cls && state.tab === "overview") html += classBar(cls, V.length);          // (3 Nov) the class bar on Overview only
+  else if (!teacher && !r.testMode && !r.admin) html += `<div class="card"><p>This page is for teachers. Your own progress is in <b>My progress</b> (account menu).</p></div>`;
+  document.querySelectorAll("#dtabs a").forEach(a => a.setAttribute("aria-current", a.dataset.tab === state.tab ? "page" : "false"));
+  if (V.length || cls || r.testMode || r.admin) html += state.tab === "learners" ? learnersHtml(V, r) : state.tab === "mistakes" ? mistakesTable(V) : state.tab === "app" ? appHtml(V)
+    : lookHtml(V) + `<div class="two">${hardHtml(V)}${topicsHtml(V)}</div>` + byExHtml(V);
+  $("main").innerHTML = html;
+  wire();
+}
+function classBar(c, n) {
+  return `<div class="card classbar"><span class="big">${esc(c.code)}</span><button type="button" class="btn sm" id="copy" data-code="${esc(c.code)}">Copy</button>`
+    + `<span class="small muted">Learners type it when they sign up, or account menu → Join a class · <b style="color:var(--ink)">${n} learner${n === 1 ? "" : "s"}</b></span>`
+    + (c.own === false ? `<span class="small muted">Teacher: ${esc(c.teacher)}</span>` : `<button type="button" class="sw" role="switch" aria-checked="${!!c.open}" data-open="${esc(c.code)}" data-to="${c.open ? "0" : "1"}"><span class="t"></span>${c.open ? "New learners can join" : "Closed to new learners"}</button>`) + `</div>`;
+}
+// (3 Nov, Ngoc: "overview trông k được rõ ràng") four numbers first, one per question the page answers
+function tilesHtml(V) {
+  const started = V.filter(v => v.done).length, need = V.filter(v => v.why.length).length;
+  // (5 Nov) a mistake right once since ("correct 1 of 2") is not one to explain again: the learner is getting it right
+  const by = {}; V.forEach(v => v.ms.forEach(m => { const x = by[m.m] = by[m.m] || { open: 0, fixed: 0 }; m.state === "fixed" ? x.fixed++ : m.rights.length !== 1 ? x.open++ : 0; }));
+  const open = Object.values(by).filter(x => x.open).length, fixed = Object.values(by).reduce((a, x) => a + x.fixed, 0);
+  const t = (l, v, s, cls, href) => `<a class="tile${cls ? " " + cls : ""}"${href ? ` href="${href}"` : ""}><span class="l">${l}</span><span class="v">${v}</span></a>`;   // (3 Nov, Ngoc: "để số thôi, đừng có để chữ phụ") no small line under the number
+  return `<div class="tiles">`
+    + t("Learners", V.length, `${started} started`, "", "#learners")
+    + t("Need a look", need, need ? "same mistake again, or wrong after being given the answer" : "nobody right now", need ? "bad" : "ok", "")
+    + t("Mistakes to explain again", open, open ? "repeated or seen once" : "none open", open ? "warn" : "ok", "#mistakes")
+    + `</div>`;   // (3 Nov, Ngoc: "bỏ") no "Right since" tile: no action for the teacher; it is in the Mistakes tab
+}
+// 1. which learner needs me? one line each: the name, the reason(s) with the exercises, Details → (3 Nov, Ngoc: was "Log →") (the details are in the Log)
+function lookHtml(V) {
+  const need = V.filter(v => v.why.length);
+  if (!need.length) return `<div class="card look" style="border-left-color:var(--ok)"><h2>Needs a look</h2><p class="allgood">✓ Nobody needs a look right now.</p></div>`;
+  const shown = need.slice(0, 5);
+  const line = v => {
+    return `<li><span class="who">${v.label}</span>${v.why.map(w => `<span class="why ${w}">${esc(WHY[w](v))}</span>`).join("")}${v.done ? ` <a class="go" href="next.html?viewer=${encodeURIComponent(v.l.username)}">Details →</a>` : ""}</li>`;
+  };
+  return `<div class="card look"><div class="hd"><h2>Needs a look (${need.length})</h2><span class="small muted">Learners who may need your attention</span></div>`
+    + `<ul>${shown.map(line).join("")}</ul>${need.length > shown.length ? `<p class="small"><a class="go" href="#learners">+${need.length - shown.length} more in Learners →</a></p>` : ""}</div>`;
+}
+// 2. the learners (3 Nov, Ngoc: numbers only, no chips, no ⋯; the details are in the Log): who needs a look first;
+// 8 circles (3 Nov, Ngoc: all round; "right at once" → "correct first try", 3 Nov): ✓ correct first try (full green), half light green: wrong at first then fixed with the help, ✗ wrong (3 Nov, Ngoc: "sai thì bảo wrong", was "not yet"; red), grey: not done; the teacher's own try apart
+const exOf = (v, k) => v.ex.find(x => Number(x.main) === k + 1 || (!("main" in x) && String(x.n) === String(k + 1)));
+function countsHtml(v) {
+  // (3 Nov, Ngoc: option 8) one number: every mistake seen (misconceptions + the others); the state is in the Learner log
+  const k = v.ms.length + v.other.length;
+  return k ? `<b>${k}</b>` : v.done ? `<span class="muted">—</span>` : "";
+}
+function learnerRow(v, cls) {
+  const sq = Array.from({ length: 8 }, (_, k) => { const e = exOf(v, k);
+    if (!e) return `<span class="c" title="exercise ${k + 1}: not done"></span>`;
+    const k2 = e.k === "help" ? "help" : e.k === "bad" ? "bad" : "ok";
+    return `<a class="${k2}" href="next.html?viewer=${encodeURIComponent(v.l.username)}#step=${Number(e.i) || 0}" title="exercise ${k + 1}: ${{ ok: "correct first try", help: "fixed with help", bad: "wrong" }[k2]}">${{ ok: "✓", help: "", bad: "✗" }[k2]}</a>`; }).join("");
+  return `<div class="lrow${cls ? " " + cls : ""}"><div class="nm"><b>${v.label}</b><span>${v.sub}</span></div>`
+    + `<div class="sqcell">${v.done ? `<div class="sq">${sq}<span class="cnt">${v.done} of ${v.total}</span></div>` : `<span class="small muted">not started</span>`}</div>`
+    + `<div class="counts">${countsHtml(v)}</div><div class="last" title="the last exercise finished">${v.last && v.done ? ago(v.last) : "—"}</div>`
+    + `<div class="acts">${v.done ? `<a class="go" href="next.html?viewer=${encodeURIComponent(v.l.username)}">Details →</a>` : ""}</div></div>`;
+}
+function learnersHtml(V, r) {
+  const list = state.filter ? V.filter(v => v.ms.some(m => m.m === state.filter) || v.other.some(o => "o:" + o.why === state.filter)) : V;
+  const fm = state.filter && (state.filter.startsWith("o:") ? { words: state.filter.slice(2) } : V.flatMap(v => v.ms).find(m => m.m === state.filter) || {});
+  // (3 Nov, Ngoc: "hiện cái nào chọn 1 thôi") the name only; the username only when two learners share a name
+  const same = {}; V.forEach(v => { same[v.l.name] = (same[v.l.name] || 0) + 1; });
+  list.forEach(v => { v.sub = state.names && same[v.l.name] > 1 ? esc(v.l.username) : ""; });
+  const flag = v => v.why.length ? "flag" : "";
+  const rows = list.map(v => learnerRow(v, flag(v))).join("");
+  const me = r.me ? learnerView({ ...r.me, created: null }) : null;
+  if (me) { me.label = "You"; me.sub = "trying the exercises · not counted"; }
+  const nums = `<div class="nums">${Array.from({ length: 8 }, (_, k) => `<span>${k + 1}</span>`).join("")}</div>`;
+  // (5 Nov, Ngoc) after "Who?" on another tab: a Back button to that tab, at that mistake (same as ✕)
+  const TABNAME = { overview: "Overview", mistakes: "Mistakes", app: "How the app did" };
+  const back = state.filter && state.from && TABNAME[state.from.tab] ? `<button type="button" class="btn sm" id="fromback">← Back to ${TABNAME[state.from.tab]}</button>` : "";
+  return `<div class="card" id="learners">${back ? `<div style="margin-bottom:10px">${back}</div>` : ""}<div class="hd"><h2>Learners</h2>${state.filter ? `<button type="button" class="filter" id="unfilter">Showing: ${esc(fm.words || state.filter)} (${list.length}) ✕</button>` : ""}<label class="small"><input type="checkbox" id="shownames"${state.names ? " checked" : ""}> Show names</label></div>`
+    + `<div class="legend"><span><i style="background:var(--ok)">✓</i>correct first try</span><span><i style="background:linear-gradient(90deg, var(--help) 50%, var(--line) 50%)"></i>fixed with help</span><span><i style="background:var(--bad)">✗</i>wrong</span><span><i style="background:var(--line)"></i>not done</span></div>`
+    + (list.length ? `<div class="lrow head2"><span>Learner</span><span>${nums}</span><span>Mistakes</span><span>Last exercise</span><span></span></div>${rows}` : `<p class="empty">No learner yet.</p>`)
+    + (me && !state.filter ? learnerRow(me, "you") : "") + `</div>`;
+}
+// (3 Nov) Overview: each main exercise, how many of the learners who did it were right at once / fixed with help / not yet
+// (3 Nov, Ngoc: like Topics, one bar = the whole class) the colours of the 8 circles: right at once · fixed with help ·
+// wrong · grey = not done; a part that is 0 is not written
+// (3 Nov, Ngoc: "để sao cho phù hợp", like Topics) the key on top, by each bar only numbers, each after its small circle
+// (4 Nov, Ngoc: ok) what each main exercise checks (built from the exercises, tools/build_web.py checks_data): on hover /
+// focus of "Exercise N", the misconceptions and their lines; X1 last
+const EX_CHECKS = [[{"w": "print(a) shows the name a, not its value", "lines": [1, 2, 3], "every": true, "x1": true}], [{"w": "a variable stores the calculation as text", "lines": [3], "every": false, "x1": false}, {"w": "a variable keeps the calculation with the numbers put in", "lines": [3], "every": false, "x1": false}, {"w": "print(a) shows the name a, not its value", "lines": [1, 2, 3, 4], "every": true, "x1": true}], [{"w": "a variable keeps its old values too", "lines": [2, 4], "every": false, "x1": false}, {"w": "a variable keeps its first value", "lines": [2, 4], "every": false, "x1": false}, {"w": "a new value is added to the old one", "lines": [2, 4], "every": false, "x1": false}, {"w": "a variable stores the calculation as text", "lines": [4], "every": false, "x1": false}, {"w": "a = b copies a into b", "lines": [4], "every": false, "x1": false}, {"w": "print(a) shows the name a, not its value", "lines": [1, 2, 3, 4, 5], "every": true, "x1": true}], [{"w": "a variable stores the calculation as text", "lines": [2, 3], "every": false, "x1": false}, {"w": "a variable keeps the calculation with the numbers put in", "lines": [2, 3], "every": false, "x1": false}, {"w": "a variable keeps its old values too", "lines": [3], "every": false, "x1": false}, {"w": "a variable keeps its first value", "lines": [3], "every": false, "x1": false}, {"w": "a new value is added to the old one", "lines": [3], "every": false, "x1": false}, {"w": "a variable keeps the formula, so it changes later", "lines": [3], "every": false, "x1": false}, {"w": "print(a) shows the name a, not its value", "lines": [1, 2, 3, 4], "every": true, "x1": true}], [{"w": "a variable keeps its old values too", "lines": [3, 4], "every": false, "x1": false}, {"w": "a variable keeps its first value", "lines": [3, 4], "every": false, "x1": false}, {"w": "a variable stores the calculation as text", "lines": [3, 4], "every": false, "x1": false}, {"w": "a new value is added to the old one", "lines": [3, 4], "every": false, "x1": false}, {"w": "a = b copies a into b", "lines": [3, 4], "every": false, "x1": false}, {"w": "print(a) shows the name a, not its value", "lines": [1, 2, 3, 4, 5], "every": true, "x1": true}], [{"w": "a variable stores the calculation as text", "lines": [3, 4, 5], "every": false, "x1": false}, {"w": "a variable keeps its old values too", "lines": [4, 5], "every": false, "x1": false}, {"w": "a variable keeps its first value", "lines": [4, 5], "every": false, "x1": false}, {"w": "a new value is added to the old one", "lines": [4, 5], "every": false, "x1": false}, {"w": "a = b copies a into b", "lines": [4, 5], "every": false, "x1": false}, {"w": "a variable keeps the formula, so it changes later", "lines": [4], "every": false, "x1": false}, {"w": "print(a) shows the name a, not its value", "lines": [1, 2, 3, 4, 5, 6], "every": true, "x1": true}], [{"w": "a variable keeps its old values too", "lines": [3, 4], "every": false, "x1": false}, {"w": "a variable keeps its first value", "lines": [3, 4], "every": false, "x1": false}, {"w": "a variable stores the calculation as text", "lines": [3, 4], "every": false, "x1": false}, {"w": "a new value is added to the old one", "lines": [3], "every": false, "x1": false}, {"w": "a variable keeps the calculation with the numbers put in", "lines": [3, 4], "every": false, "x1": false}, {"w": "print(a) shows the name a, not its value", "lines": [1, 2, 3, 4, 5], "every": true, "x1": true}], [{"w": "a variable stores the calculation as text", "lines": [3, 4, 5], "every": false, "x1": false}, {"w": "a variable keeps the calculation with the numbers put in", "lines": [3, 4, 5], "every": false, "x1": false}, {"w": "a variable keeps its old values too", "lines": [4, 5], "every": false, "x1": false}, {"w": "a variable keeps its first value", "lines": [4, 5], "every": false, "x1": false}, {"w": "a new value is added to the old one", "lines": [4, 5], "every": false, "x1": false}, {"w": "a variable keeps the formula, so it changes later", "lines": [4, 5], "every": false, "x1": false}, {"w": "a = b copies a into b", "lines": [5], "every": false, "x1": false}, {"w": "print(a) shows the name a, not its value", "lines": [1, 2, 3, 4, 5, 6], "every": true, "x1": true}]];
+function exName(k) {
+  const cs = EX_CHECKS[k] || [];
+  if (!cs.length) return `Exercise ${k + 1}`;
+  return `<span class="wl" tabindex="0">Exercise ${k + 1}<span class="wtip ctip" role="tooltip"><b>Checks</b>${cs.map(c => `<span>${esc(c.w)} <em>· ${c.every ? "every line" : `line${c.lines.length > 1 ? "s" : ""} ${c.lines.join(", ")}`}</em></span>`).join("")}</span></span>`;
+}
+function byExHtml(V) {
+  const n = V.length;
+  if (!n) return "";
+  const rows = Array.from({ length: 8 }, (_, k) => {
+    const c = { ok: 0, help: 0, bad: 0 };
+    V.forEach(v => { const e = exOf(v, k); if (e) c[e.k === "help" ? "help" : e.k === "bad" ? "bad" : "ok"]++; });
+    const nd = n - c.ok - c.help - c.bad, w = x => (100 * x / n).toFixed(1) + "%";
+    return `<div class="r"><span>${exName(k)}</span><div class="track2"><i class="a" style="width:${w(c.ok)}"></i><i class="b" style="width:${w(c.help)}"></i><i class="c" style="width:${w(c.bad)}"></i></div>`
+      + `<span class="bc">${[c.ok ? `<span><i class="a">✓</i><b>${c.ok}</b></span>` : "", c.help ? `<span><i class="b"></i><b>${c.help}</b></span>` : "", c.bad ? `<span><i class="c">✗</i><b>${c.bad}</b></span>` : "", nd ? `<span class="muted"><i class="d"></i>${nd}</span>` : ""].join("")}</span></div>`;
+  }).join("");
+  return `<div class="card"><div class="hd"><h2>By exercise</h2><span class="small muted">Learners in the class, by exercise</span></div><div class="legend"><span><i style="background:var(--ok)">✓</i>correct first try</span><span><i style="background:linear-gradient(90deg, var(--help) 50%, var(--line) 50%)"></i>fixed with help</span><span><i style="background:var(--bad)">✗</i>wrong</span><span><i style="background:var(--line)"></i>not done</span></div><div class="bx">${rows}</div></div>`;
+}
+// (3 Nov) only what is still open (still wrong or seen once); a mistake every learner fixed is in the Mistakes tab
+function hardHtml(V) {
+  const by = {};
+  V.forEach(v => v.ms.forEach(m => { if (m.state !== "fixed" && m.rights.length === 1) return;   // (5 Nov) correct 1 of 2: not to explain again
+    const x = by[m.m] = by[m.m] || { m: m.m, words: m.words, still: 0, fixed: 0, once: 0, typed: {} }; x[m.state]++;
+    if (m.state !== "fixed") [].concat(m.occ || []).forEach(o => { if (o.typed) x.typed[o.typed] = (x.typed[o.typed] || 0) + 1; }); }));
+  const all = Object.values(by), list = all.filter(x => x.still + x.once).sort((a, b) => b.still - a.still || b.once - a.once);
+  const fixedOnly = all.length - list.length;
+  const body = list.length ? list.slice(0, 3).map(x => { const n = x.still + x.once, ty = Object.entries(x.typed).sort((a, b) => b[1] - a[1])[0];
+    return `<div class="m"><div><b>${esc(x.words)}</b>`
+      + `<div class="w">${n} learner${n === 1 ? "" : "s"}: ${[x.still ? `<b>${x.still} repeated</b>` : "", x.once ? `${x.once} seen once` : ""].filter(Boolean).join(", ")}${ty ? ` · typed <code>${esc(ty[0])}</code>` : ""}</div></div>`
+      + `<button type="button" class="btn sm" data-filter="${esc(x.m)}">Who? (${n})</button></div>`; }).join("")
+    : `<p class="allgood">✓ Nothing open.</p>`;
+  const foot = `<p class="small"><a class="go" href="#mistakes">All mistakes →</a></p>`;
+  return `<div class="card"><h2>What to explain again</h2><div class="hard">${body}</div>${foot}</div>`;
+}
+// (3 Nov, Ngoc: "tùm lum") the Mistakes tab: one line per mistake — the bar and the numbers of learners (still wrong /
+// seen once / fixed since); a click opens the list: learner, where, what was typed, now; "Who?" filters Learners
+// (3 Nov, chat 4 point 14) labels that say how a line ended, not what the mistake is: not a kind of mistake (a summary
+// saved before 3 Nov still has them); "Different answers each time" was "Not consistent"
+// (5 Nov night) the words of Other mistakes changed (HK_LABEL, next_continue.js); a summary saved before has the old
+// words: shown with the new ones, in the same group
+const WHY_NOW = { "Thinks the variable on the right changed too": "Answers as if the copy went the other way", "Thinks the line gives an error": "Expects an error, but the line runs",
+  "Reads the code as text": "Types the code instead of its value", "Correct values, other order": "Correct values, wrong order",
+  "Different answers each time: maybe a guess": "Different answers to the same question", "Not consistent: maybe a guess": "Different answers to the same question",
+  "Wrong with names, correct with numbers": "Correct with numbers, wrong with variables", "Wrong when the value is stored": "Correct as a calculation, wrong when stored",
+  "Correct one value at a time": "Correct printing one value, wrong printing several", "Wrong when the new value goes back to the same name": "Correct when the line is split in two, wrong as one line",
+  "Not the value printed just before": "Uses the new value on the right side, not the old one", "Changes when another variable changes": "Answers as if it changed with another variable",
+  "Wrong with the text in the calculation": "Wrong when text is used in a calculation", "Wrong at the copy line": "Wrong when copying a value" };
+function oldStatus(w) { return ["Not explained yet", "Fixed after the help: maybe a slip", "Fixed after the hint", "The same error again"].includes(w); }
+// (4 Nov, Ngoc: "rê chuột vào cột Where … giống Learner log") the program of that exercise on hover / focus, the wrong line
+// marked; from the learner's summary (progs, next_account.js dashSummary); a summary saved before 4 Nov has none: plain text
+// (4 Nov, chat 7, Ngoc: Other had the box, the misconceptions not) a summary without programs (saved before 4 Nov: the demo
+// learners, whose rows are mostly misconceptions): the program of the main exercise from the page itself ("2"; not "2a")
+const MAIN_CODE = {"1": "a = 3\nb = 4\nprint(a + b)", "2": "a = 5\nb = 4\nc = a - b\nprint(c)", "3": "a = 1\na = 2\nb = 5\na = b\nprint(a, b)", "4": "a = 3\nb = a + 2\na = 10\nprint(a, b)", "5": "x = 1\ny = 2\nx = y\ny = x\nprint(x, y)", "6": "x = 1\ny = 2\nz = x\nx = y\ny = z\nprint(x, y)", "7": "a = 2\nb = 'OK'\na = 2 * a\nb = a * b\nprint(a, b)", "8": "a = 2\nb = 3\nt = a + b\nb = a - b\na = t\nprint(a, b)"};
+function whereTip(o) {
+  const code = (o.v && o.v.progs && o.v.progs[String(o.ex)]) || MAIN_CODE[String(o.ex)];
+  if (!code) return esc(o.where);
+  return `<span class="wl" tabindex="0">${esc(o.where)}<span class="wtip" role="tooltip">${String(code).split("\n").map((l, i) => `<span class="${i + 1 === Number(o.line) ? "hl" : ""}"><i>${i + 1}</i>${esc(l)}</span>`).join("")}</span></span>`;
+}
+function mistakesTable(V) {
+  const by = {}, og = {};
+  V.forEach(v => v.ms.forEach(m => { const x = by[m.m] = by[m.m] || { key: m.m, title: m.words, code: m.m, still: 0, once: 0, fixed: 0, list: [] }; x[m.state]++;
+    const occ = [].concat(m.occ || []); (occ.length ? occ : [{ ex: m.last, line: null, typed: "" }]).forEach(o => x.list.push({ v, where: `ex ${o.ex}${o.line ? " line " + Number(o.line) : ""}`, ex: o.ex, line: o.line, typed: String(o.typed || ""), right: String(o.right || ""), now: STATE(m), st: m.state })); }));
+  V.forEach(v => v.other.forEach(o => { const x = og[o.why] = og[o.why] || { key: "o:" + o.why, title: o.why || "Not explained yet", n: new Set(), list: [] }; x.n.add(v);
+    x.list.push({ v, where: `ex ${o.ex}${o.line ? " line " + o.line : ""}`, ex: o.ex, line: o.line, typed: o.typed, right: o.right, now: "", st: "" }); }));
+  // (3 Nov, Ngoc: "cách 1", no long bar) the misconceptions as a table: one column per state, numbers in line (an
+  // empty cell for 0); the other mistakes in a card of their own (A: two cards); a click still opens the list
+  // (4 Nov, chat 9, Ngoc: ok) a Right column after Typed (a summary saved before 4 Nov evening has none: empty)
+  const item = (x, cls, cells, n) => `<details class="mi ${cls}" data-key="${esc(x.key)}"><summary><span class="t"><b>${esc(x.title)}</b></span>${cells}`
+    + `<button type="button" class="btn sm" data-filter="${esc(x.key)}">Who? (${n})</button></summary>`
+    + `<table class="mt"><tr><th>Learner</th><th>Where</th><th>Typed</th><th>Correct</th><th>Now</th></tr>${x.list.map(o => `<tr><td>${o.v.label}</td><td>${whereTip(o)}</td><td>${o.typed ? `<code>${esc(o.typed)}</code>` : ""}</td><td>${o.right ? `<code class="rt">${esc(o.right)}</code>` : ""}</td><td>${o.now ? `<span class="chip ${o.st}">${esc(o.now)}</span>` : ""}</td></tr>`).join("")}</table></details>`;
+  const nc = (k, c, l) => `<span class="nc ${k ? c : "z"}" data-l="${l}">${k || ""}</span>`;
+  const ms = Object.values(by).sort((a, b) => b.still - a.still || b.once - a.once || b.fixed - a.fixed)
+    .map(x => item(x, "m3", nc(x.still, "s", "repeated") + nc(x.once, "o", "seen once") + nc(x.fixed, "f", "fixed"), x.still + x.once + x.fixed)).join("");
+  const os = Object.values(og).sort((a, b) => b.n.size - a.n.size).map(x => item(x, "m1", `<span class="nl">${x.n.size} learner${x.n.size === 1 ? "" : "s"}</span>`, x.n.size)).join("");
+  if (!ms && !os) return `<div class="card"><h2>Mistakes</h2><p class="empty">No mistake found yet.</p></div>`;
+  return `<div class="mtab">` + (ms ? `<div class="card"><h2>Misconceptions</h2><div class="ml"><div class="mh m3"><span>Misconception</span><span>Repeated</span><span>Seen once</span><span>Fixed</span><span></span></div>${ms}</div></div>` : "")
+    + (os ? `<div class="card oth"><div class="hd"><h2>Other mistakes</h2><span class="small muted">no misconception fits · what the help found</span></div><div class="ml">${os}</div></div>` : "")
+    + `<p class="small muted">Click a mistake: who, where and what was typed.</p></div>`;
+}
+// (5 Nov night, Ngoc: mockup ok) How the app did: five questions, for the thesis.  Each card: the main number, one bar,
+// the key with the counts, one line on how it is counted.  Fewer than 5: only the counts, no %.  Cards 2, 4, 5 read the
+// wrong lines with help (lines, from 6 Nov): a learner with no exercise saved since has none and is not counted.
+function evCard(n, q, parts, cap, why, wide, extra, frac) {
+  const N = parts.reduce((a, p) => a + p[1], 0), pc = k => Math.round(100 * k / N) + "%", few = N < 5;
+  const head = `<div class="card${wide ? " wide" : ""}"><h2 class="q">${n} · ${q}</h2>`;
+  if (!N) return head + `<p class="empty">No data yet.</p></div>`;
+  const top = parts.filter(p => p[3]).reduce((a, p) => a + p[1], 0);
+  const big = frac || few ? `${top} of ${N}` : pc(top), noun = cap(N);
+  const bar = parts.filter(p => p[1]).map(p => `<i style="width:${(100 * p[1] / N).toFixed(1)}%;background:${p[2]}" data-t="${esc(p[0])}: ${p[1]}${few ? "" : " · " + pc(p[1])}"></i>`).join("");
+  const key = parts.map(p => `<li><i style="background:${p[2]}"></i><span>${esc(p[0])}</span><b>${p[1]}${few ? "" : `<span class="muted"> · ${pc(p[1])}</span>`}</b></li>`).join("");
+  return head + `<div class="big">${big}<small>${frac || few ? noun : `of ${N} ${noun}`}</small></div><div class="bar">${bar}</div><ul class="k">${key}</ul><p class="why">${why.replace("{big}", big)}</p>${extra || ""}</div>`;
+}
+function appHtml(V) {
+  const pairs = V.flatMap(v => v.ms), lines = V.flatMap(v => v.lines || []), noLines = V.filter(v => v.done && !v.lines).length;
+  const old = noLines ? ` Not counted: ${noLines} learner${noLines === 1 ? "" : "s"} with no exercise saved since 6 Nov.` : "";
+  const stOf = m => m.state === "fixed" ? "fixed" : m.rights.length === 1 ? "once" : m.asked ? "still" : "no";
+  const C = { ok: "var(--ok)", warn: "var(--warn)", bad: "var(--bad)", help: "var(--help)", acc: "var(--accent)", line: "var(--line)", mut: "var(--muted)" };
+  const cnt = (L, f) => L.filter(f).length;
+  // 1 · per learner × misconception, as in the Learner log (the rule of 2); not asked again: not in the %
+  const asked = pairs.filter(m => stOf(m) !== "no"), notAsked = pairs.length - asked.length;
+  const by = {}; pairs.forEach(m => { const x = by[m.m] = by[m.m] || { words: m.words, n: 0, fixed: 0, once: 0, still: 0, no: 0 }; x.n++; x[stOf(m)]++; });
+  const rows = Object.values(by).sort((a, b) => b.n - a.n || a.words.localeCompare(b.words)).map(x => { const a = x.fixed + x.once + x.still, w = k => (100 * k / a).toFixed(1) + "%";
+    return `<tr><td>${esc(x.words.split(" or ").map(w => /^gets /.test(w) ? w : "thinks " + w).join(" or "))}</td><td>${x.n}</td><td>${x.fixed}</td><td>${x.once}</td><td>${x.still}</td><td class="muted">${x.no}</td><td class="mb">${a ? `<div class="bar sm">${[[x.fixed, C.ok], [x.once, C.warn], [x.still, C.bad]].filter(p => p[0]).map(p => `<i style="width:${w(p[0])};background:${p[1]}"></i>`).join("")}</div>` : ""}</td></tr>`; }).join("");
+  const table = rows ? `<h3 class="sub">By misconception</h3><div class="evw"><table class="evt"><thead><tr><th>Misconception</th><th>Learners</th><th>Fixed</th><th>Correct once</th><th>Still learning</th><th>Not asked yet</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>` : "";
+  const c1 = evCard(1, "Does the fix stay?", [["fixed: correct 2 times in a row", cnt(asked, m => stOf(m) === "fixed"), C.ok, 1], ["correct once, 1 more needed", cnt(asked, m => stOf(m) === "once"), C.warn], ["still learning", cnt(asked, m => stOf(m) === "still"), C.bad]],
+    N => `learner–misconception pairs asked again after the help (card 2)`, `Later exercises and reviews with the same kind of line, no help. Not asked again yet: ${notAsked} (not in the %).`, true, table);
+  const helped = lines.filter(x => x.h !== "none");
+  const c2 = evCard(2, `Does the help fix the line? <span class="muted" style="font-weight:500">(in the same exercise)</span>`, [["correct after Step back", cnt(helped, x => x.h === "step"), C.ok, 1], ["correct after the Hint", cnt(helped, x => x.h === "hint"), C.help, 1], ["correct after seeing the answer", cnt(helped, x => x.h === "answer"), C.warn], ["still wrong", cnt(helped, x => x.h === "wrong"), C.bad]],
+    N => `wrong line${N === 1 ? "" : "s"} with help`, `How far the help had to go, right after the mistake. {big} = Step back or the Hint, before the answer.${old}`);
+  const c3 = evCard(3, "Is it the same idea again?", [["seen again in another exercise", cnt(pairs, m => new Set(m.ex).size >= 2), C.acc, 1], ["seen once", cnt(pairs, m => new Set(m.ex).size < 2), C.line]],
+    N => `learner–misconception pairs`, "A misconception is a steady wrong idea, not a slip: does the same one come back in another exercise?");
+  const c4 = evCard(4, "Do the misconceptions explain the mistakes?", [["a misconception fits", cnt(lines, x => x.t === "m"), C.acc, 1], ["another mistake (a slip, another order …)", cnt(lines, x => x.t === "o"), C.mut], ["unexplained", cnt(lines, x => x.t === "u"), C.bad]],
+    N => `wrong line${N === 1 ? "" : "s"}`, `The first answer of each wrong line. “Fits”: the misconception gives exactly the answer typed (it may fit by chance).${old}`);
+  const two = helped.filter(x => x.f >= 2 && x.k != null);
+  const c5 = evCard(5, "Does the help tell misconceptions apart?", [["narrowed to one", cnt(two, x => x.k === 1), C.ok, 1], ["still 2 or more", cnt(two, x => x.k >= 2), C.warn], ["all ruled out", cnt(two, x => x.k === 0), C.mut]],
+    N => `answer${N === 1 ? "" : "s"} that fitted 2 or more`, `Narrowed, not proven: a misconception is ruled out when the learner is correct at a Step back where it gives another answer. Fewer than 5 answers: only the counts, no %.${old}`, false, "", true);
+  return `<div class="ev"><p class="small muted evnote">For the research: how well the help works. You do not need this page to teach.</p>${c1}${c2}${c3}${c4}${c5}</div>`;   // (5 Nov, Ngoc: "ok thêm đi") one line on what this tab is for
+}
+// Topics (3 Nov, Ngoc: one bar = the whole class; B: "practising" in amber as in My progress, not "wrong"; a part that is 0 is not written): each learner
+// (3 Nov, Ngoc: "để màu giải thích, ở dưới ghi số thôi") a key of the colours on top, only numbers by each bar
+// is good (every criterion met so far is good), still learning (5 Nov: the word of My progress; before "practising") (a criterion met so far not good yet: wrong in an exercise, and not the last 2 exercises with it right) or not seen yet (no criterion of the topic met, or no exercise yet)
+function topicsHtml(V) {
+  if (!V.length) return `<div class="card"><h2>Topics</h2><p class="empty">No learners yet.</p></div>`;
+  const first = V.find(v => v.s && Array.isArray(v.s.topics));
+  if (!first) return `<div class="card"><h2>Topics</h2><p class="empty">No exercise finished yet.</p></div>`;
+  const rows = first.s.topics.map((t, gi) => {
+    let good = 0, prac = 0;
+    V.forEach(v => {
+      const x = v.s && Array.isArray(v.s.topics) ? v.s.topics[gi] : null;
+      const met = x && Array.isArray(x.crit) ? x.crit.filter(c => c.s !== 2) : [];
+      if (!met.length) return;
+      if (met.every(c => c.s === 0)) good++; else prac++;
+    });
+    const n = V.length, ns = n - good - prac, w = k => (100 * k / n) + "%";
+    return `<div class="bar"><div class="r"><span>${esc(t.g)}</span><span class="tc">${[good ? `<b class="g">${good}</b>` : "", prac ? `<b class="p">${prac}</b>` : "", ns ? `<span class="muted">${ns}</span>` : ""].filter(Boolean).join(" · ")}</span></div>`
+      + `<div class="track"><i class="g" style="width:${w(good)}"></i><i class="p" style="width:${w(prac)}"></i></div></div>`;
+  }).join("");
+  return `<div class="card"><h2>Topics</h2><span class="small muted">Learners in the class, by topic</span><div class="legend"><span><i style="background:var(--ok)"></i>good</span><span><i style="background:var(--warn)"></i>still learning</span><span><i style="background:var(--line)"></i>not seen yet</span></div>${rows}</div>`;
+}
+
+function wire() {
+  const sel = $("clssel"); if (sel) sel.onchange = () => { state.cls = sel.value; state.data = null; state.filter = ""; try { localStorage.setItem("dash-cls", state.cls); } catch (e) {} load(); };
+  const nm = $("shownames"); if (nm) nm.onchange = () => { state.names = nm.checked; try { localStorage.setItem("dash-names", nm.checked ? "1" : "0"); } catch (e) {} draw(); };
+  const cp = $("copy"); if (cp) cp.onclick = async () => { try { await navigator.clipboard.writeText(cp.dataset.code); cp.textContent = "Copied ✓"; } catch (e) { cp.textContent = "Select and copy"; } setTimeout(() => { cp.textContent = "Copy"; }, 1600); };
+  const uf = $("unfilter"), fb = $("fromback"); if (uf) uf.onclick = () => { const f = state.from; state.filter = ""; state.from = null;
+    if (f && f.tab !== state.tab) { state.back = f.key; location.hash = f.tab; } else draw(); };
+  if (fb && uf) fb.onclick = uf.onclick;
+  document.querySelectorAll("[data-filter]").forEach(b => b.onclick = ev => { ev.preventDefault(); state.filter = state.filter === b.dataset.filter ? "" : b.dataset.filter;
+    if (state.filter) { state.from = { tab: state.tab, key: b.dataset.filter }; location.hash = "learners"; state.tab = "learners"; } draw(); window.scrollTo({ top: 0 }); });
+  // (2 Nov, Ngoc) one click, the code is made by the script; the button says it is working, then a green line
+  const f = $("newcls"); if (f) f.onclick = async () => {
+    if (state.creating) return;
+    state.creating = true; f.disabled = true; f.textContent = "Creating…";
+    let r; try { r = await api("createClass", {}); } catch (e) { r = { error: "net" }; }
+    state.creating = false;
+    if (r.ok) { state.msg = { ok: true, code: r.code }; state.cls = r.code; state.data = null; try { localStorage.setItem("dash-cls", r.code); } catch (e) {} load(); }
+    else { state.msg = { ok: false, text: r.error === "net" ? "Could not reach the server (internet?). Try again." : r.error === "teacher" ? "Only a teacher account can create a class." : "The class was not created. Try again." }; draw(); }
+  };
+  document.querySelectorAll("[data-open]").forEach(b => b.onclick = async () => {
+    b.disabled = true;
+    try { await api("openClass", { code: b.dataset.open, open: b.dataset.to === "1" }); } catch (e) {}
+    load(); });
+  document.querySelectorAll("[data-reset]").forEach(b => b.onclick = async () => {
+    const out = document.querySelector(`[data-out="${b.dataset.reset}"]`);
+    if (!b.dataset.sure) { b.dataset.sure = "1"; b.textContent = "Click again: new recovery code"; return; }
+    const r = await api("resetLearner", { username: b.dataset.reset });
+    out.innerHTML = r.ok ? `New recovery code: <span class="code-box">${esc(r.recovery)}</span> — give it to the learner (Log in → Forgot password).` : "Not allowed.";
+    b.textContent = "Reset password"; delete b.dataset.sure; const d = b.closest("details"); if (d) d.open = false; });
+  document.querySelectorAll("[data-remove]").forEach(b => b.onclick = async () => {
+    if (!b.dataset.sure) { b.dataset.sure = "1"; b.textContent = "Click again: remove"; return; }
+    const r = await api("removeLearner", { username: b.dataset.remove }); if (r.ok) load(); });
+}
+load();
+</script>
+
+</body></html>
