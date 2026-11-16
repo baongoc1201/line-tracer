@@ -1004,18 +1004,18 @@ print(4 * 3)  <span class="muted"># a number instead of the text</span>
       <p>The <b>Hint</b> gives the rule and where to look, never the answer. The <b>answer</b> comes only when the line is still wrong: the correct value and why. Examples from the bank exercises (the highlighted line is the one asked).</p>
       <div class="tablewrap boxed"><table>
         <tr><th>Kind of line</th><th>Program</th><th>Hint</th><th>Answer</th></tr>
-        <tr><td><b>A number</b></td><td class="cd"><span class="h">total = 9</span></td><td>What is total now?</td><td>total is now 9.</td></tr>
+        <tr><td><b>A number</b></td><td class="cd"><span class="h">total = 9</span></td><td>What is total now?</td><td>After line 1, total is 9.</td></tr>
         <tr><td><b>A new value</b></td><td class="cd">total = 9
-<span class="h">total = 4</span></td><td>total gets a new value; the old one is gone. What is total now?</td><td>total is 9 before line 2. total is now 4.</td></tr>
+<span class="h">total = 4</span></td><td>total gets a new value; the old one is gone. What is total now?</td><td>Before line 2, total is 9. After line 2, total is 4.</td></tr>
         <tr><td><b>A calculation</b></td><td class="cd">count = 2
-<span class="h">level = count + 7</span></td><td>What number do you get when you add 2 and 7?</td><td>2 + 7 = 9, so level is now 9.</td></tr>
+<span class="h">level = count + 7</span></td><td>What number do you get when you add 2 and 7?</td><td>count is 2, so count + 7 = 2 + 7 = 9. After line 2, level is 9.</td></tr>
         <tr><td><b>A value on the right side</b></td><td class="cd">count = 2
-<span class="h">level = count + 7</span></td><td>What is count before line 2?</td><td>count is 2 before line 2.</td></tr>
+<span class="h">level = count + 7</span></td><td>What is count before line 2?</td><td>count is 2.</td></tr>
         <tr><td><b>A copy</b></td><td class="cd">points = 4
 age = 6
-<span class="h">points = age</span></td><td>points gets the value stored in age, not the name age.<br>The old value of points is gone.<br>Check the value of age after line 2.</td><td>points gets the value of age. age is 6, so points is now 6.</td></tr>
+<span class="h">points = age</span></td><td>points gets the value stored in age, not the name age.<br>The old value of points is gone.<br>Check the value of age after line 2.</td><td>points gets the value of age. age is 6, so after line 3, points is 6.</td></tr>
         <tr><td><b>The same name on both sides</b></td><td class="cd">total = 1
-<span class="h">total = total + 4</span></td><td>total is 1 before line 2. What number do you get when you add 1 and 4?</td><td>total is 1 before line 2. 1 + 4 = 5, so total is now 5.</td></tr>
+<span class="h">total = total + 4</span></td><td>total is 1 before line 2. What number do you get when you add 1 and 4?</td><td>Before line 2, total is 1, so total + 4 = 1 + 4 = 5. After line 2, total is 5.</td></tr>
         <tr><td><b>A variable the line does not change</b></td><td class="cd">steps = 4
 size = 5
 age = steps
@@ -1026,7 +1026,7 @@ steps = 1
 <span class="h">print(points)</span></td><td>points keeps its value when steps changes later.</td><td>points got 10 on line 2. Changing steps later does not change points.</td></tr>
         <tr><td><b>print a variable</b></td><td class="cd">total = 9
 total = 4
-<span class="h">print(total)</span></td><td>print shows the value total has now.</td><td>total is 4, so the output is 4.</td></tr>
+<span class="h">print(total)</span></td><td>print shows the current value of total.</td><td>total is 4, so the output is 4.</td></tr>
         <tr><td><b>print a calculation</b></td><td class="cd">total = 8
 count = 5
 <span class="h">print(total + count)</span></td><td>What number do you get when you add 8 and 5?</td><td>8 + 5 = 13, so the output is 13.</td></tr>

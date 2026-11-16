@@ -613,7 +613,7 @@ const DATA = {"main": ["M1", "M3", "M4", "M5"], "watch": ["M2", "X10", "X17", "X
 const SHEET_URL = "https://odqbjeltsathqimokmhh.supabase.co/functions/v1/api";
 // X10, X17, X18 need if or loops, which these exercises do not have, so they are left out.
 const MAIN = DATA.main, WATCH = DATA.watch.filter(m => ["M2", "X19", "X1", "N1"].includes(m)).concat(["N2"]), ALL = MAIN.concat(WATCH);   // N2: no mode, found by its behaviour (26 Oct, choice A)   // X1 added 26 Oct (trial page data only)
-const VERSION = "v4 · fe92055+ · next";   // filled in by tools/build_web.py
+const VERSION = "v4 · aaf99c3 · next";   // filled in by tools/build_web.py
 const EXS = DATA.exercises;
 
 // Same comparison as minterp/stepwise.py: normalize(), same(), same_output().
@@ -1690,17 +1690,24 @@ function askBox(text) {
 }
 // (2 Nov, Ngoc: "hint là cái ô") the Hint in a box of its own, above the question (before: in the guide line, with the
 // words of the step); once per question box
+// (17 Nov, Ngoc: her picture, "Claude outputs/Hint đủ thông tin (16-11)/cach_hien_bien.html" I) a soft blue box, a bulb
+// and "Hint" on a line of their own, the text below; code (names and calculations alike) as one blue bold pill
+const HINT_BULB = `<svg class="hb-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>`;
+function hintBoxHtml(text) { return `<div class="hintbox" role="note"><div class="hb-h">${HINT_BULB}<span class="hb-l">Hint</span></div><div class="hb-t">${text}</div></div>`; }
 function hintBox(text) {
   const body = $("qbody"); if (!body || !text || body.querySelector(".hintbox")) return;
-  body.insertAdjacentHTML("afterbegin", `<div class="hintbox" role="note"><span class="hb-l">Hint</span><span>${text}</span></div>`);
+  body.insertAdjacentHTML("afterbegin", hintBoxHtml(text));
 }
 (function () { const st = document.createElement("style");
-  st.textContent = `.hintbox { display: flex; gap: 10px; align-items: baseline; margin: 0 0 12px; padding: 9px 12px; border-radius: 8px; border-left: 4px solid #d29a1c;
-  background: color-mix(in srgb, #f4c34d 18%, var(--surface)); line-height: 1.5; }
-.hintbox .hb-l { font-weight: 700; color: #9a6a00; flex: none; }
-.hintbox code { font-family: Menlo, Consolas, monospace; font-size: .92em; background: var(--surface); border: 1px solid color-mix(in srgb, #d29a1c 35%, transparent); border-radius: 4px; padding: 0 4px; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hintbox .hb-l { color: #f3c969; } }
-:root[data-theme="dark"] .hintbox .hb-l { color: #f3c969; }`;
+  st.textContent = `.hintbox { --hb-bg: #eef2fb; --hb-pill: #d6e4fb; --hb-code: #2f6fd6; --hb-icon: #3d7be0;
+  margin: 0 0 12px; padding: 12px 16px 14px; border-radius: 12px; background: var(--hb-bg); line-height: 1.7; }
+.hintbox .hb-h { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; }
+.hintbox .hb-i { width: 20px; height: 20px; flex: none; fill: none; stroke: var(--hb-icon); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hintbox .hb-l { font-weight: 700; color: var(--ink); }
+.hintbox code { display: inline-block; font-family: Menlo, Consolas, monospace; font-size: .85em; font-weight: 700; line-height: 1.6; padding: 0 .55em;
+  border-radius: 999px; background: var(--hb-pill); color: var(--hb-code); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hintbox { --hb-bg: #1a2638; --hb-pill: #24395a; --hb-code: #9cc0ff; --hb-icon: #7aa7f0; } }
+:root[data-theme="dark"] .hintbox { --hb-bg: #1a2638; --hb-pill: #24395a; --hb-code: #9cc0ff; --hb-icon: #7aa7f0; }`;
   document.head.append(st); })();
 // the original lines up to line L (without their prints), with their numbers
 function originalUpTo(L) {
@@ -2333,7 +2340,7 @@ function layoutLoop() {
   drawProgram(lines);
   // (16 Nov, Ngoc: "gõ sai thì nói not quite chứ tự dưng im") the answer just given: wrong at the line → "✗ Not quite."
   // above the smaller program; a smaller program correct → "✓ Correct.", wrong → "✗ Not quite." (before: nothing)
-  $("status").innerHTML = loop.say === "right" ? "<b>✓ Correct.</b>" : loop.say === "wrong" ? "<b>✗ Not quite.</b>" : "";
+  $("status").innerHTML = loop.say === "right" ? "<b class=\"st-ok\">✓ Correct.</b>" : loop.say === "wrong" ? "<b class=\"st-no\">✗ Not quite.</b>" : "";
   askBox(p.text);
   // (2 Nov, Ngoc) the Hint comes with "Try this one again" (right after the smaller step was right), not after one
   // more wrong answer (before: a - b typed three times before the Hint); in its own box
@@ -2571,8 +2578,34 @@ function fxLine(a, b, back) {
   }
   return html;
 }
-const drawPlain = drawProgram;
+const drawPlain0 = drawProgram;
+// (17 Nov, Ngoc: A) the new name of a Step back (c = a - b) stays bold until the line has its own name again: before,
+// any redraw (b = c coming in) dropped it, and the c of a line that had not changed looked like it changed
+var fxKeepBold = {};      // line number → the name shown bold
+function fxReBold() {
+  [...$("code").querySelectorAll(".cline")].forEach(r => {
+    const n = Number(((r.querySelector(".ln") || {}).textContent || "").trim()), s = r.querySelector(".src"), x = fxKeepBold[n];
+    if (!n || !s || !x) return;
+    const t = s.textContent.split("#")[0].trim(), orig = (typeof ex !== "undefined" && ex ? ex.code.split("\n")[n - 1] || "" : "").trim();
+    // gone once the line has another name or is the exercise's own line again (the help over, another exercise)
+    if (!new RegExp(`^${x}\\s*=`).test(t) || t === orig) { delete fxKeepBold[n]; return; }
+    if (!s.querySelector("b.splitnew")) s.innerHTML = s.innerHTML.replace(new RegExp(`^${x}\\b`), `<b class="splitnew">${x}</b>`);
+  });
+}
+function drawPlain(lines) { drawPlain0(lines); fxReBold(); }
+// (17 Nov, Ngoc: "c, b, c") render() first writes the exercise's own lines into the box, then the help draws its program:
+// compared with the screen, every new step of a Step back looked like "b = a - b → c = a - b" again and replayed the
+// rename.  While the same help (loop / check / redo) is on, compare with the program this help drew last.
+var fxLast = null;
+function fxCtx() {
+  if (typeof loop !== "undefined" && loop && !loop.result) return loop;
+  if (typeof check !== "undefined" && check) return check;
+  if (typeof redo !== "undefined" && redo) return redo;
+  return null;
+}
 drawProgram = function (lines) {
+  const ctx = fxCtx(), last = fxLast && ctx && fxLast.ctx === ctx ? fxLast.lines : null;
+  fxLast = { ctx, lines };
   if (splitBusy) { splitBusy.lines = lines; return; }            // the split animation is running: drawn when it ends
   // (15 Nov, Ngoc: lines 2-3 of exercise 1 vanished and faded in again after a wrong answer, when line 1 had had a
   // Step back) always compare with the rows ON THE SCREEN, never with a remembered copy: the line by line screen is
@@ -2585,6 +2618,7 @@ drawProgram = function (lines) {
     return { t: c.textContent, n: n && n.trim() ? Number(n) : null };
   }).filter(Boolean);
   if (rows.length) prev = rows;
+  if (last) prev = last.map(l => ({ t: l.t, n: l.n }));
   if (!prev) {                                 // the screen before the help: the lines up to the asked line and its print
     const q = loop && !loop.result ? loop.q : check ? ex.questions[check.qi] : null;
     prev = q ? originalUpTo(q.line).concat(onPrint(q.line) ? [] : [{ t: `print(${q.name})`, n: null }]) : [];
@@ -2609,6 +2643,7 @@ drawProgram = function (lines) {
     return `<div class="${cls}"><span class="ln">${l.n == null ? "" : l.n}</span><span class="src">${markWord(body, l)}${cmt}</span></div>`;
   }).join("");
   if (anyChange && !fxSwapped) splitSound(0.4, STEP_SOUND);   // the swap plays its own sound
+  fxReBold();
 };
 
 // ---------------------------------------------------------------- the split line (15 Nov, Ngoc: "làm đi"; chosen 11 Nov,
@@ -2623,7 +2658,9 @@ function splitFx(lines, prev) {
   const anim = (el, k, o) => motion && el ? el.animate(k, o) : null;
   const as = t => /^(\w+) = (.+)$/.exec(t), rows = () => [...$("code").querySelectorAll(".cline")];
   const done = (ms, after) => { setTimeout(() => { const L = splitBusy.lines; splitBusy = null; drawPlain(L); after && after(); }, motion ? ms : 0); };
-  const bold = k => () => { const r = rows()[k], s = r && r.querySelector(".src"); if (s) s.innerHTML = s.innerHTML.replace(/^(\w+)/, '<b class="splitnew">$1</b>'); };
+  const bold = (k, keep) => () => { const r = rows()[k], s = r && r.querySelector(".src"), n = r && Number(((r.querySelector(".ln") || {}).textContent || "").trim());
+    if (keep && n && s) { const m = /^(\w+)/.exec(s.textContent); if (m) fxKeepBold[n] = m[1]; }
+    if (s) s.innerHTML = s.innerHTML.replace(/^(\w+)/, '<b class="splitnew">$1</b>'); };
   // back to the line: c = rhs / x = c  →  x = rhs
   for (let k = 0; k + 1 < prev.length; k++) {
     const p1 = as(prev[k].t), p2 = /^(\w+) = (\w+)$/.exec(prev[k + 1].t);
@@ -2668,7 +2705,7 @@ function splitFx(lines, prev) {
     const G = s.querySelector(".mg-ghost"), N = s.querySelector(".mg-new"), h = rows()[k].getBoundingClientRect().height;
     anim(G, [{ transform: "none", opacity: 1 }, { transform: `translateY(${h * .9}px)`, opacity: .9, offset: .7 }, { transform: `translateY(${h}px)`, opacity: 0 }], { duration: 1100, delay: 300, easing: "ease-in", fill: "forwards" });
     anim(N, [{ opacity: 0, transform: "translateX(-8px)" }, { opacity: 1, transform: "none" }], { duration: 500, delay: 1000, fill: "backwards" });
-    done(1700, bold(k)); return true;
+    done(1700, bold(k, true)); return true;
   }
   return false;
 }
@@ -4446,6 +4483,8 @@ function fbTyped(q) {
   const calc = /[-+*\/%]/.test(typed.replace(/^-(?=\d)/, "")), letters = /[A-Za-z_]/.test(typed);
   return { typed, calc, calcNames: calc && letters };
 }
+// line L gives a new value to `name` (a = a + 1: yes; c = a - b for a or b: no)
+function writesAt(name, L) { return new RegExp(`^\\s*${name}\\s*=(?!=)`).test(ex.code.split("\n")[L - 1] || ""); }
 function fbOld(x, L) { const w = ex.questions.filter(o => o.role === "write" && o.name === x && o.line < L).pop(); return w ? w.correct : null; }
 function fbTextRaw(q, not) {
   const s = fbTextRaw0(q), t = notOf(not);
@@ -4459,6 +4498,8 @@ function notOf(x) { return x == null ? "" : String(x).replace(/\s+/g, " ").trim(
 // (13 Nov, the Feedback table "Claude outputs/Bảng Feedback (13-11)", Ngoc chose B) a line with a calculation names the
 // value of every variable in it, then the calculation with the numbers, then the result — always (no branch on what was
 // typed: calcNames is gone).  Values of text have quotes, as in the code; an output has none.
+// (17 Nov, Ngoc: B) "Before line N, x is …" / "After line N, x is …" (before: "x is now …": "now" read as the question
+// already on the screen, the next line)
 function fbTextRaw0(q) {
   const { L, src } = fbParts(q), c = q.correct, t = lineKind(q), vals = fbVals(L);
   const lit = v => (/^-?\d/.test(String(v)) || /^'.*'$/.test(String(v)) ? String(v) : `'${v}'`);
@@ -4468,18 +4509,20 @@ function fbTextRaw0(q) {
   const worked = (e, p, r) => { const v = say(e); return `${v ? v + ", so " : ""}${e} = ${p !== e ? p + " = " : ""}${r}.`; };
   switch (t.k) {
     case "calc": return `${worked(t.inner, t.put, t.all)} The output is ${t.all}.`;                                   // 2
-    case "assign": return `${worked(t.rhs, t.put, lit(c))} ${t.x} is now ${lit(c)}.`;                                 // 1
-    case "self": return `Before line ${L}, ${worked(rhs, t.put, lit(c))} ${t.x} is now ${lit(c)}.`;                    // 3, 4
-    case "text": return `${worked(rhs, t.put, lit(c))} ${t.x} is now ${lit(c)}.`;                                     // 5
+    case "assign": return `${worked(t.rhs, t.put, lit(c))} After line ${L}, ${t.x} is ${lit(c)}.`;                                 // 1
+    case "self": return `Before line ${L}, ${worked(rhs, t.put, lit(c))} After line ${L}, ${t.x} is ${lit(c)}.`;                    // 3, 4
+    case "text": return `${worked(rhs, t.put, lit(c))} After line ${L}, ${t.x} is ${lit(c)}.`;                                     // 5
     case "many": return `${t.g.map(x => `${x.name} is ${lit(x.correct)}`).join(" and ")}, so the output is ${t.all}.`;
     case "notchanged": return `Line ${L} only changes ${t.x}. ${q.name} stays the same: ${c}.`;
-    case "copy": return `${t.x} gets the value of ${t.rhs}. ${t.rhs} is ${c}, so ${t.x} is now ${c}.`;
-    case "replace": { const o = fbOld(t.x, L); return o != null ? `${t.x} is ${o} before line ${L}. ${t.x} is now ${c}.` : `${t.x} is now ${c}.`; }
+    case "copy": return `${t.x} gets the value of ${t.rhs}. ${t.rhs} is ${c}, so after line ${L}, ${t.x} is ${c}.`;
+    case "replace": { const o = fbOld(t.x, L); return o != null ? `Before line ${L}, ${t.x} is ${o}. After line ${L}, ${t.x} is ${c}.` : `After line ${L}, ${t.x} is ${c}.`; }
     case "print": return `${q.name} is ${c}, so the output is ${c}.`;
     // not in the approved table: the sentences of before
     case "keeps": return `${q.name} got ${c} on line ${t.from}. Changing ${t.later} later does not change ${q.name}.`;
-    case "read": return `${q.name} is ${c} before line ${L}.`;
-    case "given": return `${t.x} is now ${c}.`;        // (30 Oct, Ngoc: not "the output": no print here)
+    // (16 Nov, Ngoc) "before line L" only when line L changes the variable: "b is 4 before line 3" for c = a - b read as
+    // "b changes after line 3"
+    case "read": return writesAt(q.name, L) ? `Before line ${L}, ${q.name} is ${c}.` : `${q.name} is ${c}.`;
+    case "given": return `After line ${L}, ${t.x} is ${c}.`;        // (30 Oct, Ngoc: not "the output": no print here)
     default: return `The answer is ${c}.`;
   }
 }
@@ -4491,24 +4534,28 @@ function hintTextRaw(q) {
   const src = n => (ex.code.split("\n")[n - 1] || "").trim(), rhsOf = n => src(n).split("=").slice(1).join("=").trim();
   const names = e => [...new Set(String(e).match(/[A-Za-z_]\w*/g) || [])].filter(n => n !== "print");
   const and = xs => xs.map(C).join(" and ");
+  // (17 Nov, Ngoc) "Python uses the current values of a and b to calculate a + b." (names in quotes are text, not variables)
+  const uses = e => { const ns = names(String(e).replace(/'[^']*'|"[^"]*"/g, ""));
+    return `Python uses the current value${ns.length > 1 ? "s" : ""} of ${and(ns)} to calculate ${C(e)}.`; };
   // the line where the variable last got its value (from the code: a write question can also be "x not changed here")
   const lastWrite = (name, before) => { for (let n = before - 1; n >= 1; n--) if ((src(n).match(/^([A-Za-z_]\w*)\s*=(?!=)/) || [])[1] === name) return { line: n }; return null; };
   const isCalc = r => /[A-Za-z_]/.test(r) && !/^[A-Za-z_]\w*$/.test(r);       // a calculation with a name (not a copy, not a number)
   switch (t.k) {
-    case "assign": return `First, Python calculates ${C(t.rhs)}. Then ${C(t.x)} gets the answer.`;                       // 1
-    case "calc": { const ns = names(t.inner);                                                                              // 2
-      // (16 Nov, Ngoc: ok) no "not the letters": a Hint is one sentence for every learner, so it states the rule and never
-      // names a mistake the learner may not have made (a wrong number got "not the letters" too)
-      return ns.length > 1 ? `Python calculates with the numbers stored in ${and(ns)}.`
-        : `Python calculates with the number stored in ${C(ns[0])}.`; }
+    // (17 Nov, Ngoc) "the current value(s)": which values (before: "First, Python calculates a - b.", no "when")
+    case "assign": return `${uses(t.rhs)} Then ${C(t.x)} gets the answer.`;                                               // 1
+    // (16 Nov, Ngoc: ok) no "not the letters": a Hint is one sentence for every learner, so it states the rule and never
+    // names a mistake the learner may not have made (a wrong number got "not the letters" too)
+    case "calc": return uses(t.inner);                                                                                     // 2
     case "replace": return `At line ${L}, ${C(t.x)} gets a new value. The new value replaces the old one.`;              // 3
     case "many": return `${C(src(L))} prints the value of ${t.g.map(x => C(x.name)).join(", then the value of ")}, with a space between.`;   // 4
     // (16 Nov, Ngoc: ok) + what print shows: the line is asked again as print(x), and a learner who typed the name "y"
     // was left with no help (the sentence is the same for every learner, as in 10)
-    case "given": return `In Python, the variable on the left gets the value on the right. ${C(`print(${q.name})`)} shows the value ${C(q.name)} has now.`;   // 5
+    case "given": return `In Python, the variable on the left gets the value on the right. ${C(`print(${q.name})`)} shows the current value of ${C(q.name)}.`;   // 5 (17 Nov: "current", as 1, 2)
     case "read": { const w = lastWrite(q.name, L);                                                                         // 6
       // (16 Nov, Ngoc: ok) before: "On the right side, y is the value stored in y before line 3 runs. Check y in line 2." ("y is y")
-      return w ? `Before line ${L} runs, ${C(q.name)} has the value it got in line ${w.line}.` : `On the right side, ${C(q.name)} has the value it had before line ${L} runs.`; }
+      // (16 Nov, Ngoc) "Before line L runs" only when line L changes the variable (as the Feedback)
+      return w ? (writesAt(q.name, L) ? `Before line ${L} runs, ${C(q.name)} has the value it got in line ${w.line}.` : `${C(q.name)} has the value it got in line ${w.line}.`)
+        : `On the right side, ${C(q.name)} has the value it had before line ${L} runs.`; }
     case "self": { const r = rhsOf(L), ns = names(r);                                                                     // 7
       return [`In Python, ${C("=")} gives a value to a variable. It does not compare the two sides.`,
         `Python calculates ${C(r)} using the ${ns.length > 1 ? "values of " + and(ns) : "value of " + C(ns[0])} before line ${L}.`,
@@ -4519,7 +4566,7 @@ function hintTextRaw(q) {
     // (16 Nov, Ngoc: "mình type số chứ có type y đâu") no "not the name y": learners who typed a number got it too
     case "copy": return `${C(t.x)} gets the value stored in ${C(t.rhs)}.`                       // 9
       + (fbOld(t.x, L) != null ? ` This value replaces the old value of ${C(t.x)}.` : "");
-    case "print": return `print shows the value ${C(q.name)} has now.`;                                                    // 10
+    case "print": return `print shows the current value of ${C(q.name)}.`;                                                    // 10
     case "keeps": return `On line ${t.from}, Python calculates ${C(rhsOf(t.from))}, and ${C(q.name)} gets the answer. Changing ${C(t.later)} later does not change ${C(q.name)}.`;   // 11
     case "text": return "A number times a text repeats the text.";                                                        // 12
     default: return "Look at the line again.";
@@ -4528,7 +4575,7 @@ function hintTextRaw(q) {
 // plain text, shown as HTML: escaped here once
 function fbText(q, not) { return esc(fbTextRaw(q, not)); }
 // (15 Nov, Ngoc chose G) on screen only (the logged text stays plain): the right value just before ", not …" in bold,
-// "a is now <b>5</b>, not 2."; "read": "a is <b>5</b> before line 4, not 2."  `h` is the escaped text (fbText).
+// "After line 3, a is <b>5</b>, not 2."  `h` is the escaped text (fbText).
 function fbBold(h, q) {
   h = String(h || ""); if (!q || !/, not /.test(h)) return h;
   let all = ""; try { all = lineKind(q).all || ""; } catch (e) {}
@@ -5330,6 +5377,12 @@ body.student #outq .ans { background: none; color: var(--ink); font-weight: 600;
 .qpanel #status.lay-guide { display: block; margin: 14px 16px 0; padding: 8px 12px; border-radius: 8px; background: var(--accent-soft); color: var(--ink); font-weight: 400; line-height: 1.5; }
 .qpanel #status.lay-guide b { font-weight: 700; }
 .qpanel #status.lay-guide:empty { display: none; }
+/* (17 Nov, Ngoc: B, "Claude outputs/Hint đủ thông tin (16-11)/so_sanh_notquite.html") ✓ / ✗ without a box: only the line,
+   ✗ soft red, ✓ green (the other messages keep their box) */
+.qpanel #status.lay-guide:has(> b.st-ok, > b.st-no) { background: none; padding: 2px 0 0; }
+.qpanel #status b.st-no { color: #b3261e; } .qpanel #status b.st-ok { color: #1e7a3c; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .qpanel #status b.st-no { color: #ff8a80; } :root:not([data-theme="light"]) .qpanel #status b.st-ok { color: #6fcf8f; } }
+:root[data-theme="dark"] .qpanel #status b.st-no { color: #ff8a80; } :root[data-theme="dark"] .qpanel #status b.st-ok { color: #6fcf8f; }
 .titleblock h1 { display: none; }
 #tabs .ptitle { display: none; }
 .wrap header.top { margin-bottom: 4px; }
@@ -5373,7 +5426,7 @@ function renderSide() {
   const done = plan.steps.filter(s => s.done).length, cur = step();
   const item = (s, k, sub) => {
     const e = s ? byKey(s.key) : byKey(PLAN_MAIN[k - 1]);
-    const now = s && s === cur, cls = ["side-it", sub ? "sub" : "", s && s.done ? "done" : "", now ? "now" : "", sub && e && e.live ? "live" : ""].join(" ");
+    const now = s && s === cur, cls = ["side-it", sub ? "sub" : "", s && s.done ? "done" : "", now ? "now" : "", sub && e && (e.live || /^Live /.test(e.key || "")) ? "live" : ""].join(" ");   // (17 Nov) "Live practise …" (Practise this, the whole program) has no .live
     const label = sub ? (s.cb ? `${k}·r${cbNo(s)}` : `${k}${s.letter}`) : String(k);
     const title = sub ? (s.pr ? "Practise" : s.cb ? "Review" : e && e.live ? "Live exercise" : e && e.calc ? "Small exercise" : "Follow-up") : `Exercise ${k}`;
     const data = sub ? `data-step="${plan.steps.indexOf(s)}"` : `data-main="${k}"`;
@@ -6434,7 +6487,7 @@ function renderContinue() {
   // (30 Oct, Ngoc: 2) one box above the question: the line is right now, the rule of the line (Feedback), and what to
   // do next; the green box at the bottom is only for an exercise that stopped (it looked like "the end")
   // (13 Nov, new flow, Figure B) "✓ Correct." after a Step back, after the Hint or after typing the answer (before: "You fixed line N")
-  $("status").innerHTML = `<b>✓ Correct.</b>${fixFmtNote(contMsg)}${contMsg.fb ? "<br>" + contMsg.fb : ""}`;
+  $("status").innerHTML = `<b class="st-ok">✓ Correct.</b>${fixFmtNote(contMsg)}${contMsg.fb ? "<br>" + contMsg.fb : ""}`;
   const box = $("fbbox"); if (box) box.hidden = true;
 }
 // the help questions of the episodes stay in the student's history
@@ -7049,12 +7102,17 @@ function mpPctTop(xs) {
 // (16 Nov, Ngoc) the switch: ★ / % in the top bar of the Exercises page (site/account_core.js hdrDraw), for everyone,
 // so both pages can be looked at in each way
 document.addEventListener("scoreview", () => { mpPctMode = mpReadView(); if (typeof render === "function") render(); if (typeof renderSide === "function") renderSide(); });
+const MP_MEDAL = `<svg viewBox="0 0 40 52" aria-hidden="true"><path d="M11 2h7l4 14h-7z" fill="#e2574c"/><path d="M29 2h-7l-4 14h7z" fill="#3d7be0"/>`
+  + `<circle cx="20" cy="32" r="15" fill="var(--c)" stroke="rgba(0,0,0,.15)" stroke-width="1.5"/><circle cx="20" cy="32" r="11" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.5"/>`
+  + `<path d="M20 24l2.4 4.9 5.4.8-3.9 3.8.9 5.4L20 36.4l-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z" fill="#fff"/></svg>`;
 function myProgressHtml() {
   const xs = mpExercises(), M = skyMedals(), max = 3 * PLAN_MAIN.length, n = Math.min(max, skyStars()), next = M.find(m => n < m[0]);
   const who = (typeof tester === "function" && tester()) || (typeof account !== "undefined" && account && account.name) || "";
   const say = n >= max ? `You have all your stars${who ? ", " + esc(who) : ""}!` : `Hi${who ? " " + esc(who) : ""}! Tap an exercise to see which lines to practise.`;
   const top = M[M.length - 1][0];
-  const med = M.map(([at, c]) => `<span class="mpmd${n >= at ? " on" : ""}" style="left:${(100 * at / top).toFixed(1)}%;--c:${c}">${at}</span>`).join("");
+  // (17 Nov, Ngoc chose A, `Claude outputs/Mốc huy chương (17-11)/so_sanh_moc.html`) a medal with its ribbon on the bar, the
+  // number under the bar ("8 ★"); a medal not reached yet grey
+  const med = M.map(([at, c]) => `<span class="mpmd${n >= at ? " on" : ""}" style="left:${(100 * at / top).toFixed(1)}%;--c:${c}">${MP_MEDAL}<span class="lbl">${at} ★</span></span>`).join("");
   const sel = xs.find(x => x.k === mpSel && x.done);
   const node = x => {
     // a star part filled (16 Nov): the grey part, and over it a yellow piece as long as the water
@@ -7076,8 +7134,36 @@ function myProgressHtml() {
     + mpWatchHtml(xs, w)
     + `<h3 class="mpxh">Your exercises</h3><div class="prow${pc ? " pct" : ""}">${xs.map(node).join("")}</div>`
     + `<p class="mpkey">${pc ? "The ring shows your score for each exercise." : "Each exercise can earn 3 stars. The yellow part of the ring shows your stars."}</p>`
-    + (sel ? mpDetail(sel) : "") + mpTopicsHtml(done, w) + `</div>`;
+    + mpJourneyHtml() + (sel ? mpDetail(sel) : "") + mpTopicsHtml(done, w) + `</div>`;
 }
+// (17 Nov, Ngoc chose 3 + "10 of 14" + "từ đầu luôn", `Claude outputs/My progress khi xong hết (17-11)/so_sanh_hanh_trinh.html`)
+// "Your journey": 3 numbers that grow from the first exercise done — the lines traced (the exercises and practices done),
+// the programs correct at the first guess (of the main exercises done), the lines fixed after being wrong (of the wrong
+// lines; fixed with the help or the Hint counts, not after the answer was shown).  No skill or misconception names.
+function mpJourneyHtml() {
+  const mains = plan.steps.filter(s => !s.extra && s.done && !s.review); if (!mains.length) return "";
+  let lines = 0, first = 0, wrong = 0, fixed = 0;
+  plan.steps.filter(s => s.done && !s.review && (!s.extra || s.pr)).forEach(s => { const v = s.snap || {}, e = v.ex || byKey(s.key); if (e) lines += e.code.split("\n").length; });
+  mains.forEach(s => { const v = s.snap || {}; if (v.out && v.out.ok) first++;
+    (v.episodes || []).forEach(ep => { wrong++; const k = (ep.redo && ep.redo.kind) || (ep.loop && ep.loop.result && (ep.loop.result.outcome || ep.loop.result.kind)) || "";
+      if (/fixed|right/.test(k) && !/after the answer/.test(k)) fixed++; }); });
+  const tile = (c, b, t) => `<div class="mpjt ${c}"><b>${b}</b><span>${t}</span></div>`;
+  return `<h3 class="mpxh">Your journey</h3><div class="mpjr">`
+    + tile("", lines, "lines of Python you traced")
+    + tile("ok", `${first} of ${mains.length}`, "programs correct on the first try")
+    + (wrong ? tile("ok", `${fixed} of ${wrong}`, "lines you fixed yourself") : tile("ok", "All", "lines correct the first time")) + `</div>`;
+}
+(function () { const st = document.createElement("style");
+  st.textContent = `.mpjr { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 760px; margin: 0 0 8px; }
+.mpjt { background: #f4f7fd; border: 1px solid #dde5f4; border-radius: 14px; padding: 14px 10px 12px; text-align: center; }
+.mpjt b { display: block; font-size: 28px; line-height: 1.1; color: #24407a; } .mpjt span { display: block; margin-top: 6px; font-size: 13.5px; color: var(--ink); line-height: 1.35; }
+.mpjt.ok { background: #eef8f1; border-color: #cfe9d7; } .mpjt.ok b { color: #2e7d46; }
+@media (max-width: 560px) { .mpjr { gap: 8px; } .mpjt { padding: 12px 6px 10px; } .mpjt b { font-size: 22px; } .mpjt span { font-size: 12.5px; } }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .mpjt { background: #1b2840; border-color: #2b3d5c; } :root:not([data-theme="light"]) .mpjt b { color: #9cc0ff; }
+  :root:not([data-theme="light"]) .mpjt.ok { background: #16301f; border-color: #24503a; } :root:not([data-theme="light"]) .mpjt.ok b { color: #6fcf8f; } }
+:root[data-theme="dark"] .mpjt { background: #1b2840; border-color: #2b3d5c; } :root[data-theme="dark"] .mpjt b { color: #9cc0ff; }
+:root[data-theme="dark"] .mpjt.ok { background: #16301f; border-color: #24503a; } :root[data-theme="dark"] .mpjt.ok b { color: #6fcf8f; }`;
+  document.head.append(st); })();
 // Student view only, and only with Feedback on (the stars are feedback); also while looking back at a done exercise;
 // not while an exercise done before is done again
 function myProgAllowed() { return role === "student" && (typeof fbOn === "undefined" || fbOn) && plan && (!plan.review || !!plan.review.view); }
@@ -7137,9 +7223,10 @@ body.mp-on .side { display: none; } body.mp-on .lay { grid-template-columns: min
 .mpxhead img { width: 92px; height: 92px; flex: none; position: relative; z-index: 1; margin-right: -26px; }
 .mpxbub { flex: 1; background: var(--surface); border-radius: 18px; padding: 14px 18px 14px 34px; box-shadow: 0 4px 14px rgba(0,0,0,.12); font-size: 17px; font-weight: 700; color: var(--ink); }
 .mpxmed { margin: 14px 0 6px; } .mptot { margin: 0; font-size: 15px; color: var(--ink); } .mptot b { font-size: 18px; }
-.mptrk { position: relative; height: 10px; border-radius: 5px; background: var(--line); margin: 22px 14px 8px 4px; } .mptrk i { position: absolute; inset: 0 auto 0 0; border-radius: 5px; background: #f5b400; }
-.mpmd { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; background: var(--line); color: var(--muted); }
-.mpmd.on { background: var(--c); color: #fff; box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+.mptrk { position: relative; height: 10px; border-radius: 5px; background: var(--line); margin: 58px 32px 56px 12px; }   /* (17 Nov, Ngoc) medals with a ribbon, the number under */ .mptrk i { position: absolute; inset: 0 auto 0 0; border-radius: 5px; background: #f5b400; }
+.mpmd { position: absolute; top: 50%; transform: translate(-50%, -62%); width: 60px; height: 78px; } .mpmd svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 2px 2px rgba(0,0,0,.18)); }
+.mpmd:not(.on) svg { filter: grayscale(1) opacity(.45); }
+.mpmd .lbl { position: absolute; left: 50%; top: calc(62% + 30px); transform: translateX(-50%); font: 800 14px system-ui, sans-serif; color: var(--muted); white-space: nowrap; } .mpmd.on .lbl { color: var(--ink); }
 .mpnx { font-size: 14px; color: var(--muted); margin: 14px 0 0; }
 .mpxh { margin: 22px 0 10px; font-size: 18px; font-weight: 800; color: var(--accent); letter-spacing: .03em; text-transform: uppercase; }
 .prow { display: flex; flex-wrap: wrap; gap: 6px 4px; margin: 6px 0 4px; }
@@ -7548,7 +7635,7 @@ function renderRedo() {
   }
   if (retry0Pending()) {            // (15 Nov) the try again; the Hint only when the student opens it (💡, next_hintbtn.js)
     drawProgram(redo.retry0.lines);
-    $("status").innerHTML = "<b>✗ Not quite.</b> Try again.";
+    $("status").innerHTML = "<b class=\"st-no\">✗ Not quite.</b> Try again.";
     const box = $("fbbox"); if (box) box.hidden = true;
     askBox(redo.retry0.text); if (redo.hintSeen) hintBox(hintText(redo.q));
     qpanel.hidden = false;
@@ -7556,7 +7643,7 @@ function renderRedo() {
   }
   if (retry1Pending()) {
     drawProgram(redo.retry.lines);
-    $("status").innerHTML = "<b>✗ Not quite.</b>";    // (16 Nov, Ngoc) the answer just given was wrong: say so above the Hint
+    $("status").innerHTML = "<b class=\"st-no\">✗ Not quite.</b>";    // (16 Nov, Ngoc) the answer just given was wrong: say so above the Hint
     const box = $("fbbox"); if (box) box.hidden = true;
     askBox(redo.retry.text); if (!redo.hintHidden) hintBox(hintText(redo.q));          // (2 Nov) the Hint in its own box (next_help.js); (15 Nov) 💡 can hide it
     qpanel.hidden = false;
@@ -7593,10 +7680,10 @@ function renderRedo() {
   // (1 Nov) the message of the line answered last: "✓ You fixed line N." with its Feedback, "✓ Right with the new numbers."
   const lastHead = () => {
     if (!contMsg) return "";
-    const i = contMsg.redo, fixed = `<b>✓ Correct.</b>${fixFmtNote(contMsg)}${contMsg.fb ? "<br>" + contMsg.fb : ""}`;
+    const i = contMsg.redo, fixed = `<b class="st-ok">✓ Correct.</b>${fixFmtNote(contMsg)}${contMsg.fb ? "<br>" + contMsg.fb : ""}`;
     if (!i || i.kind === "fixed after the hint" || i.kind === "fixed on the second try") return fixed;
-    if (i.kind === "fixed after the answer") return `<b>✓ Correct.</b>${fixFmtNote(contMsg)}`;     // its rule: in "To remember"
-    if (["redo right", "fixed, right with new numbers"].includes(i.kind)) return `<b>✓ Correct with the new numbers.</b>`;
+    if (i.kind === "fixed after the answer") return `<b class="st-ok">✓ Correct.</b>${fixFmtNote(contMsg)}`;     // its rule: in "To remember"
+    if (["redo right", "fixed, right with new numbers"].includes(i.kind)) return `<b class="st-ok">✓ Correct with the new numbers.</b>`;
     return NOT_YET.includes(i.kind) && i.kind !== "redo wrong" && i.kind !== "fixed, wrong with new numbers" ? `<b>Line ${contMsg.line}.</b> ${fbBold(contMsg.fb, contMsg.redo && contMsg.redo.q || ex.questions.find(o => o.line === contMsg.line))}` : "";
   };
   if (end) {
@@ -8442,6 +8529,8 @@ body.hasend .status #next { position: absolute; width: 1px; height: 1px; padding
 .prcard { margin: 12px 16px 18px; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); display: flex; gap: 12px; align-items: center; justify-content: space-between; color: var(--ink, inherit); font-size: 15px; }
 .qpanel #status.lay-guide:has(b.exdone) { background: none; padding: 14px 0 4px; margin-left: 16px; margin-right: 16px; }
 #status b.exdone { display: flex; align-items: center; gap: 10px; font-size: 17px; }
+/* (17 Nov, Ngoc: B, "Claude outputs/Hint đủ thông tin (16-11)/so_sanh_cuoibai.html") a space between the last line's ✓ / Feedback and the end */
+#status br + b.exdone { margin-top: 16px; }
 #status b.exdone:not(.notyet)::before { content: "✓"; display: grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: 50%;
   background: var(--ok); color: var(--surface); font-size: 16px; animation: exdone-pop .45s cubic-bezier(.3, 1.6, .5, 1); }
 @keyframes exdone-pop { from { transform: scale(.3); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -8696,11 +8785,11 @@ function skyFly(key, n, items) {
   if (!n || skyFlySeen[key]) return;
   skyFlySeen[key] = true;
   const total = skyStars(), old = total - n;
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { skyMedalCheck(old, total); return; }
   skyHeadHold = old; skyHeadShow(old);
   const max = skyMedals()[skyMedals().length - 1][0];
   items.slice(0, n).forEach((it, i) => setTimeout(() => {
-    const g = it.from(), h = document.querySelector(".skyhead .trk"), done = () => { skyHeadHold = i === n - 1 ? null : old + i + 1; skyHeadShow(old + i + 1); };
+    const g = it.from(), h = document.querySelector(".skyhead .trk"), done = () => { skyHeadHold = i === n - 1 ? null : old + i + 1; skyHeadShow(old + i + 1); skyMedalCheck(old + i, old + i + 1); };
     if (!h || !g) return done();
     const t = h.getBoundingClientRect(), r = g.getBoundingClientRect();
     if (!t.width || !r.width) return done();       // the bar not on the screen (a narrow screen): the number only
@@ -8710,6 +8799,7 @@ function skyFly(key, n, items) {
     f.style.cssText = `position:fixed;z-index:9999;pointer-events:none;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px`;
     document.body.appendChild(f);
     const dx = tx - (r.left + r.width / 2), dy = ty - (r.top + r.height / 2), sc = 22 / r.width;
+    skyFlySound(i);
     const a = f.animate([
       { transform: "translate(0,0) scale(1) rotate(0)", offset: 0 },
       { transform: `translate(${dx * 0.35}px,${dy * 0.35 - 90}px) scale(${0.5 + sc / 2}) rotate(140deg)`, offset: 0.45 },
@@ -8720,6 +8810,24 @@ function skyFly(key, n, items) {
       const sp = document.querySelector(".skyhead .nx span");
       if (sp && sp.animate) sp.animate([{ transform: "scale(1)" }, { transform: "scale(1.35)", color: "#d69e00" }, { transform: "scale(1)" }], { duration: 380, easing: "ease-out" }); };
   }, it.at));
+}
+// (17 Nov, Ngoc chose 3 of `Claude outputs/Âm thanh sao bay (17-11)/nghe_thu_sao_bay.html`) a soft whoosh while a star
+// flies, a "ting" when it reaches the bar (higher for each star, as the coins); off with the Sound button (soundOn, next_fx.js)
+function skyFlySound(i) {
+  if (typeof soundOn === "undefined" || !soundOn) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state !== "running") actx.resume();
+    const t = actx.currentTime, len = 0.8, buf = actx.createBuffer(1, Math.floor(actx.sampleRate * len), actx.sampleRate), d = buf.getChannelData(0);
+    for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1;
+    const src = actx.createBufferSource(), bp = actx.createBiquadFilter(), g = actx.createGain(); src.buffer = buf; bp.type = "bandpass"; bp.Q.value = 2;
+    bp.frequency.setValueAtTime(600, t); bp.frequency.exponentialRampToValueAtTime(3000, t + len);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.035, t + len * 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    src.connect(bp).connect(g).connect(actx.destination); src.start(t); src.stop(t + len);
+    const at = t + 0.83, f = [1318.5, 1568, 2093][Math.min(i, 2)], o = actx.createOscillator(), og = actx.createGain(); o.type = "sine"; o.frequency.setValueAtTime(f, at);
+    og.gain.setValueAtTime(0.0001, at); og.gain.exponentialRampToValueAtTime(0.06, at + 0.01); og.gain.exponentialRampToValueAtTime(0.0001, at + 0.3);
+    o.connect(og).connect(actx.destination); o.start(at); o.stop(at + 0.35);
+  } catch (e) {}
 }
 // the end of an exercise: the big stars, after they have popped (skyBigGlasses: 0.2 + i * 0.3 s)
 function skyFlyEnd(s, n) {
@@ -8738,6 +8846,8 @@ function skyName() {
 }
 function skySay() {
   const say = (skyMood || {}).say;
+  if (say === "medal") return skyMood.medal >= 24 ? `<b>All 3 medals!</b> You did it, ${skyName()}!`
+    : `<b>${skyMood.medal >= 16 ? "A silver medal!" : "A bronze medal!"}</b> Well done, ${skyName()}.`;
   return say === "right" ? `<b>Correct!</b> Nice work, ${skyName()}.`
     : say === "wrong" ? "Let's look at it step by step." : `Take your time, ${skyName()}.`;
 }
@@ -8822,6 +8932,75 @@ html[data-theme="dark"] .skyhead .pst > div { background: #24344f; } html[data-t
 // (15 Nov, Ngoc chose C of `Claude outputs/Âm thanh sao (15-11)/Nghe thử âm thanh sao (15-11).html`) a sound only for the
 // stars of the end card: each full star a coin, higher each time, in time with its pop.  Once per finished exercise (not
 // when it is opened again); off with the Sound button (soundOn, next_fx.js).
+// (17 Nov, Ngoc chose 4 of `Claude outputs/Hiệu ứng huy chương (17-11)/thu_huy_chuong.html`) a medal reached (8, 16, 24
+// stars), once each: the medal pops with a ring of light, Sky says so, a chime (24: a short fanfare) and a little confetti
+// from the medal; at 24 a card in the middle of the page (Sky, the 3 medals, "Great!" / "See your journey" → My progress).
+// Stars mode only (the % mode has no medals); the sound off with the Sound button; no movement with reduced motion.
+const SKY_MEDAL_STAR = '<path d="M12 7l1.5 3.1 3.4.4-2.5 2.3.7 3.4L12 14.6l-3.1 1.6.7-3.4-2.5-2.3 3.4-.4z" fill="#fff"/>';
+function skyMedalCheck(from, to) { skyMedals().forEach(([at]) => { if (from < at && to >= at) skyMedalFx(at); }); }
+function skyMedalFx(at) {
+  if (typeof skyPctOn === "function" && skyPctOn()) return;
+  plan.medalsSeen = plan.medalsSeen || []; if (plan.medalsSeen.includes(at)) return; plan.medalsSeen.push(at);
+  const M = skyMedals(), k = M.findIndex(m => m[0] === at), last = k === M.length - 1, motion = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const el = document.querySelectorAll(".skyhead .md")[k];
+  if (el && motion) { el.classList.add("pop"); el.insertAdjacentHTML("beforeend", '<span class="ray"></span>');
+    setTimeout(() => { el.classList.remove("pop"); const r = el.querySelector(".ray"); if (r) r.remove(); }, 1300); }
+  skyMood = { face: "happy", say: "medal", medal: at };
+  const img = $("skyimg"), sb = $("skysay"); if (img) img.src = skyImg("happy"); if (sb) sb.innerHTML = skySay();
+  skyMedalSound(last);
+  if (el && motion) { const r = el.getBoundingClientRect(); if (r.width) skyConfetti(r.left + r.width / 2, r.top + r.height / 2, last ? 70 : 18, last ? 160 : 70); }
+  if (last) setTimeout(skyMedalCard, motion ? 900 : 0);
+}
+function skyMedalSound(last) {
+  if (typeof soundOn === "undefined" || !soundOn) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state !== "running") actx.resume();
+    const note = (t, f, len, type, peak) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = type; o.frequency.setValueAtTime(f, t);
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + len);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + len + .05); };
+    const t = actx.currentTime + .05;
+    if (!last) [1046.5, 1318.5, 1568].forEach((f, i) => note(t + i * .1, f, .5, "sine", .07));
+    else { [[523.3, 0], [659.3, .14], [784, .28], [1046.5, .42]].forEach(([f, d]) => note(t + d, f, .3, "triangle", .09));
+      [523.3, 659.3, 784, 1046.5].forEach(f => note(t + .62, f, 1.1, "triangle", .05)); }
+  } catch (e) {}
+}
+function skyConfetti(x, y, k, spread) {
+  const cols = ["#f5b400", "#3aa65d", "#3d7be0", "#e2574c", "#a26bd6", "#ff9f1c"];
+  for (let i = 0; i < k; i++) {
+    const d = document.createElement("div"); d.className = "skyconf"; d.setAttribute("aria-hidden", "true");
+    d.style.cssText = `left:${x}px;top:${y}px;background:${cols[i % cols.length]}`; document.body.append(d);
+    const ang = Math.random() * Math.PI * 2, v = spread * (.4 + Math.random() * .6), dx = Math.cos(ang) * v, dy = Math.sin(ang) * v - spread * .6;
+    d.animate([{ transform: "translate(0,0) rotate(0)", opacity: 1 }, { transform: `translate(${dx}px,${dy + spread * 1.4}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }],
+      { duration: 1400 + Math.random() * 700, easing: "cubic-bezier(.2,.6,.4,1)", fill: "forwards" }).onfinish = () => d.remove();
+  }
+}
+function skyMedalCard() {
+  if ($("medalcard")) return;
+  const meds = skyMedals().map(([, c]) => `<svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="${c}"/>${SKY_MEDAL_STAR}</svg>`).join("");
+  document.body.insertAdjacentHTML("beforeend", `<div class="medalcard" id="medalcard" role="dialog" aria-modal="true" aria-labelledby="mch"><div>`
+    + `<img src="${skyImg("happy")}" alt=""><h2 id="mch">24 / 24 ★</h2><div class="meds">${meds}</div><p>All 3 medals! You did every exercise.</p>`
+    + `<button type="button" id="mcok">Great!</button><button type="button" class="mcgo" id="mcgo">See your journey</button></div></div>`);
+  const close = () => { const c = $("medalcard"); if (c) c.remove(); };
+  $("mcok").onclick = close;
+  $("mcgo").onclick = () => { close(); if (typeof mpShow === "function" && typeof myProgAllowed === "function" && myProgAllowed()) mpShow(true); };
+  $("mcok").focus();
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) skyConfetti(innerWidth / 2, innerHeight / 2 - 60, 90, 220);
+}
+(function () { const st = document.createElement("style");
+  st.textContent = `.skyhead .md.pop svg { animation: mdpop 1.1s cubic-bezier(.3,1.6,.5,1); filter: drop-shadow(0 0 6px var(--c)); }
+@keyframes mdpop { 0% { transform: scale(1); } 30% { transform: scale(2.1) rotate(-15deg); } 55% { transform: scale(1.7) rotate(10deg); } 100% { transform: scale(1); } }
+.skyhead .md .ray { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px; border-radius: 50%; border: 3px solid var(--c); opacity: 0; animation: mdray .9s ease-out .15s; pointer-events: none; }
+@keyframes mdray { 0% { transform: scale(.4); opacity: .9; } 100% { transform: scale(1.8); opacity: 0; } }
+.skyconf { position: fixed; z-index: 10001; width: 8px; height: 12px; border-radius: 2px; pointer-events: none; }
+.medalcard { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: 16px; background: rgba(20,30,50,.35); animation: mcfade .3s; }
+.medalcard > div { background: var(--surface); color: var(--ink); border-radius: 20px; padding: 26px 30px 22px; text-align: center; max-width: 340px; box-shadow: 0 20px 50px rgba(0,0,0,.25); animation: mcin .5s cubic-bezier(.3,1.5,.5,1); }
+.medalcard img { width: 110px; } .medalcard h2 { margin: 6px 0 4px; font-size: 24px; } .medalcard p { margin: 0 0 16px; }
+.medalcard .meds { display: flex; justify-content: center; gap: 10px; margin: 8px 0 14px; }
+.medalcard #mcok { font: inherit; font-weight: 700; padding: 9px 22px; border-radius: 10px; border: 0; background: #24407a; color: #fff; cursor: pointer; }
+.medalcard .mcgo { display: block; margin: 12px auto 0; font: inherit; font-size: 14px; background: none; border: 0; color: var(--ink); text-decoration: underline; cursor: pointer; }
+@keyframes mcfade { from { opacity: 0; } } @keyframes mcin { from { transform: scale(.6); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .medalcard, .medalcard > div { animation: none; } }`;
+  document.head.append(st); })();
 var skyCoinDone = {};
 function skyCoins(key, n) {
   if (!n || skyCoinDone[key] || typeof soundOn === "undefined" || !soundOn) return;
@@ -10335,7 +10514,10 @@ const VI_EXACT = {
   // Sky
   "Correct!": "Đúng rồi!", "Let's look at it step by step.": "Mình cùng xem từng bước nhé.", "no name ✎": "chưa có tên ✎",
   // the exercise
-  "now": "đang làm", "All 3 medals!": "Đủ 3 huy chương!", "Hint": "Gợi ý", "💡 Hint": "💡 Gợi ý",
+  "now": "đang làm", "All 3 medals!": "Đủ 3 huy chương!", "A bronze medal!": "Huy chương đồng!", "A silver medal!": "Huy chương bạc!", "Great!": "Tuyệt!", "See your journey": "Xem hành trình của bạn",
+  "All 3 medals! You did every exercise.": "Đủ 3 huy chương! Bạn đã làm hết các bài.", "Your journey": "Hành trình của bạn",
+  "lines of Python you traced": "dòng Python bạn đã dò", "programs correct on the first try": "chương trình đúng ngay lần đầu",
+  "lines you fixed yourself": "dòng bạn tự sửa được", "lines correct the first time": "dòng đúng ngay lần đầu", "All": "Tất cả", "Hint": "Gợi ý", "💡 Hint": "💡 Gợi ý",
   "Step 1: type the output.": "Bước 1: nhập kết quả chương trình in ra.",
   "What does this program print?": "Chương trình này in ra gì?", "What does this line print?": "Dòng này in ra gì?",
   "Check": "Kiểm tra", "Your answer for the whole program:": "Bạn đoán chương trình in ra:", "Your answer:": "Bạn trả lời:",
@@ -10377,7 +10559,7 @@ const VI_EXACT = {
   "The correct answer looks wrong": "Đáp án đúng trông như bị sai", "I don't understand the question": "Mình không hiểu câu hỏi",
   "Something else": "Chuyện khác", "More (if you want)": "Thêm (nếu bạn muốn)", "Send": "Gửi", "Cancel": "Hủy",
   "Pick one of the buttons, or write a few words.": "Bạn chọn một nút, hoặc viết vài chữ nhé.", "Sending…": "Đang gửi…",
-  "Sent. Thank you!": "Đã gửi. Cảm ơn bạn!", "Could not send (no internet?).": "Không gửi được (mạng có ổn không?).",
+  "Sent. Thank you!": "Đã gửi. Cảm ơn bạn!", "Show the score as": "Xem điểm theo", "Stars": "Sao", "Percent": "Phần trăm", "Language": "Ngôn ngữ", "English": "Tiếng Anh", "Saving…": "Đang lưu…", "Saved.": "Đã lưu.", "Could not send. Please tell your teacher (it is sent again when the internet is back).": "Không gửi được. Hãy báo thầy cô (bài sẽ được gửi lại khi có mạng).", "Could not send (no internet?).": "Không gửi được (mạng có ổn không?).",
   // attributes
   "change the name": "đổi tên", "Need some help": "Bạn có cần giúp không?", "type the output": "nhập kết quả in ra",
   "A hint comes after a try": "Thử một lần rồi mới có gợi ý", "Show a hint": "Xem gợi ý", "Hide the hint": "Ẩn gợi ý",
@@ -10393,7 +10575,7 @@ const P = "\u0001\\d+\u0001";
 const R = (re, to) => [new RegExp(re.replace(/\(P\)/g, "(" + P + ")").replace(/\(P\|/g, "(" + P + "|"), "g"), to];
 const VI_RULES = [
   // Sky (the name is a child element)
-  R("^Take your time, ", "Từ từ suy nghĩ nhé, "), R("Nice work, ", "Giỏi lắm, "),
+  R("^Take your time, ", "Từ từ suy nghĩ nhé, "), R("^(P) Well done, (P)\\.$", "$1 Giỏi lắm, $2."), R("^(P) You did it, (P)!$", "$1 Bạn làm được rồi, $2!"), R("Nice work, ", "Giỏi lắm, "),
   R("^Hi (.+)! Tap an exercise to see which lines to practise\\.$", "Chào $1! Bấm vào một bài để xem dòng nào cần luyện tập."),
   R("^Hi! Tap an exercise to see which lines to practise\\.$", "Chào bạn! Bấm vào một bài để xem dòng nào cần luyện tập."),
   R("^You have all your stars, (.+)!$", "$1 đã có đủ sao rồi!"), R("^You have all your stars!$", "Bạn đã có đủ sao rồi!"),
@@ -10404,9 +10586,10 @@ const VI_RULES = [
   R("^Click again to start new \\((.+)'s progress on this computer is cleared\\)$", "Bấm lần nữa để bắt đầu mới (tiến độ của $1 trên máy này sẽ bị xóa)"),
   R("^Try again in (\\d+) seconds\\.$", "Thử lại sau $1 giây."),
   // the exercise column, stars
+  R("^# you typed (P)$", "# bạn nhập $1"), R("^\\(nothing\\)$", "(không nhập gì)"),
   R("^You typed ", "Bạn nhập "), R("^Exercise (\\d+)$", "Bài $1"), R("^Exercise (\\d+) of (\\d+)$", "Bài $1 / $2"), R("^Exercise (\\d+) · Practise$", "Bài $1 · Luyện tập"), R("^Exercise (\\d+)(\\w?) · Practise$", "Bài $1$2 · Luyện tập"),
   R("^Next medal at (\\d+) ★$", "Huy chương tiếp theo: $1 ★"),
-  R("^(\\d+) of 3 stars$", "$1 / 3 sao"), R("^of (\\d+) stars$", "/ $1 sao"), R("^(\\d+) of (\\d+) stars$", "$1 / $2 sao"),
+  R("^(\\d+) of 3 stars$", "$1 / 3 sao"), R("^of (\\d+) stars$", "/ $1 sao"), R(" of (\\d+) stars$", " / $1 sao"), R("^Exercise (\\d+) (P)$", "Bài $1 $2"), R("^Exercise (\\d+), ", "Bài $1, "), R("^(\\d+) of (\\d+) stars$", "$1 / $2 sao"),
   R("^(\\d+) stars?$", "$1 sao"), R("^Exercise (\\d+), (\\d+) of 3 stars$", "Bài $1, $2 / 3 sao"),
   R("^Exercise (\\d+), not done yet$", "Bài $1, chưa làm"), R("^Exercise (\\d+), do it now$", "Bài $1, làm ngay"),
   R("^(\\d+) more stars? for the next medal\\.$", "Thêm $1 sao nữa là có huy chương tiếp theo."),
@@ -10437,9 +10620,11 @@ const VI_RULES = [
   R("^(\\d+) more practice exercises? to fill your stars\\.$", "Còn $1 bài luyện tập nữa là đầy sao."),
   // Feedback (Bảng Feedback): sentence by sentence
   R("Before line (\\d+), ", "Trước dòng $1, "),
+  R("After line (\\d+), ", "Sau dòng $1, "), R("after line (\\d+), ", "sau dòng $1, "),   // (17 Nov) "After line 2, a is 2."
   R("\\b(\\w+) is (\\S+?) and (\\w+) is (\\S+?), so ", "$1 là $2 và $3 là $4, nên "),
   R("\\b(\\w+) is (\\S+?), so ", "$1 là $2, nên "),
   R("\\b(\\w+) is (\\S+?) before line (\\d+)\\.", "Trước dòng $3, $1 là $2."),
+  R("^(\\w+) is (\\S+?), not (.+?)\\.$", "$1 là $2, không phải $3."), R("^(\\w+) is (\\S+?)\\.$", "$1 là $2."),
   R("\\b(\\w+) gets the value of (\\w+)\\. ", "$1 nhận giá trị của $2. "),
   R("\\b(\\w+) is now (.+?), not (.+?)\\.$", "Bây giờ $1 có giá trị $2, không phải $3."),
   R("\\b(\\w+) is now (.+?)\\.$", "Bây giờ $1 có giá trị $2."), R("\\b(\\w+) is now (.+?)\\. ", "Bây giờ $1 có giá trị $2. "),
@@ -10448,6 +10633,7 @@ const VI_RULES = [
   R("the output is (P|$)", "kết quả in ra là $1"),
   R("The output is (.+?)\\.$", "Kết quả in ra là $1."), R("^The answer is (.+?)\\.$", "Đáp án là $1."),
   R("^The value is (.+?) before line (\\d+)\\.$", "Trước dòng $2, giá trị là $1."),
+  R("(dòng \\d+, )(\\w+) is ", "$1$2 là "),   // (17 Nov) "Before line 2, a is 1." / "After line 2, a is 2." (after the "so" rules)
   R("Line (\\d+) only changes (\\w+)\\. (\\w+) stays the same: (.+?)\\.", "Dòng $1 chỉ thay đổi $2. $3 vẫn giữ nguyên giá trị: $4."),
   R("(\\w+) got (.+?) on line (\\d+)\\. Changing (\\w+) later does not change (\\w+)\\.", "$1 nhận $2 ở dòng $3. Sau đó, dù $4 thay đổi, giá trị của $5 vẫn không đổi."),
   R("^Correct values\\. Python prints (.+?): the comma in (.+?) is not printed, the values get a space\\.$", "Đúng rồi. Python in ra $1: dấu phẩy trong $2 không được in, giữa các giá trị là một dấu cách."),
@@ -10458,6 +10644,7 @@ const VI_RULES = [
   R("^In Python,$", "Trong Python,"), R("^gives a value to a variable\\. It does not compare the two sides\\.$", "gán giá trị cho biến. Nó không so sánh hai vế."),
   R("^First, Python calculates ", "Đầu tiên, Python tính "), R("Python calculates with the numbers stored in ", "Python tính bằng các số đang lưu trong "),
   R("Python calculates with the number stored in ", "Python tính bằng số đang lưu trong "),
+  R("^Python uses the current values? of ", "Python dùng giá trị hiện tại của "), R(" to calculate (P)", " để tính $1"),
   R("Python calculates ", "Python tính "), R(" using the values? of ", " bằng giá trị của "), R("^using the values? of$", "bằng giá trị của"),
   R("(P) and (P)", "$1 và $2"), R("^and$", "và"), R("^Then, ", "Sau đó, "), R("^Then,$", "Sau đó,"), R("\\. Then ", ". Sau đó "),
   R(" gets the answer\\.", " nhận kết quả."), R("^gets the answer\\.$", "nhận kết quả."),
@@ -10473,10 +10660,11 @@ const VI_RULES = [
   R("^At line (\\d+), ", "Ở dòng $1, "), R(" gets a new value\\. The new value replaces the old one\\.", " nhận giá trị mới. Giá trị mới thay cho giá trị cũ."),
   R("^On the right side, (P) has the value it had before line (\\d+) runs\\.$", "Ở vế phải, $1 vẫn có giá trị như trước khi dòng $2 chạy."),
   R("^Before line (\\d+) runs, (P) has the value it got in line (\\d+)\\.$", "Trước khi dòng $1 chạy, $2 có giá trị nó nhận ở dòng $3."),
+  R("^(P) has the value it got in line (\\d+)\\.$", "$1 có giá trị nó nhận ở dòng $2."),
   R("^On line (\\d+), Python tính (P), and (P) nhận kết quả\\. Changing (P) later does not change (P)\\.$", "Ở dòng $1, Python tính $2 và $3 nhận kết quả. Sau đó, dù $4 thay đổi, giá trị của $5 vẫn không đổi."),
   R("^Line (\\d+) only changes (P)\\. (P) stays the same\\.$", "Dòng $1 chỉ thay đổi $2. $3 vẫn giữ nguyên giá trị."),
-  R("^print shows the value (P) has now\\.$", "print hiển thị giá trị hiện tại của $1."),
-  R("^In Python, the variable on the left gets the value on the right\\. (P) shows the value (P) has now\\.$", "Trong Python, biến ở vế trái nhận giá trị ở vế phải. $1 hiển thị giá trị hiện tại của $2."),
+  R("^print shows the current value of (P)\\.$", "print hiển thị giá trị hiện tại của $1."),
+  R("^In Python, the variable on the left gets the value on the right\\. (P) shows the current value of (P)\\.$", "Trong Python, biến ở vế trái nhận giá trị ở vế phải. $1 hiển thị giá trị hiện tại của $2."),
   R(", nên Bây giờ ", ", nên bây giờ "),
 ];
 
@@ -10511,7 +10699,7 @@ function viPut(el, str, kids) {
   return true;
 }
 function viEl(el) {
-  if (el.closest(VI_SKIP)) return;
+  if (el.closest(VI_SKIP) && !el.closest(".tycmt")) return;   // (17 Nov, Ngoc) "# you typed 4" sits in the code line but is ours
   let has = false; for (const n of el.childNodes) if (n.nodeType === 3 && /[A-Za-z]{2}/.test(n.nodeValue)) { has = true; break; }
   if (!has) return;
   const { s, kids } = viString(el);
