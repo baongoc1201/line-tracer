@@ -160,7 +160,11 @@ td.ex { font-family: var(--f-mono); font-size: 13.5px; color: var(--muted); }
 /* the arrow down fills the whole space between two steps, so it always touches both */
 .fx .gap { align-items: stretch; min-height: 64px; } .fx .gap > .down { grid-column: 2; } .fx .gap > .side { grid-column: 3; align-self: center; margin: 10px 0; }
 .fx .step { font-size: 19px; font-weight: 700; color: var(--accent); line-height: 1.2; }
-@media (max-width: 640px) { .fx .row, .fx .gap { grid-template-columns: minmax(0, 1fr); gap: 8px; } .fx .gap > .down, .fx .gap > .side { grid-column: auto; } .fx .gap > .side { margin: 0 0 10px; } .fx .gap { min-height: 40px; } }
+@media (max-width: 640px) { .fx .row, .fx .gap { grid-template-columns: minmax(0, 1fr); gap: 8px; } .fx .gap > .down, .fx .gap > .side { grid-column: auto; } .fx .gap > .side { margin: 4px 0 10px; order: -1; } .fx .gap { min-height: 40px; } .fx .exit > i:first-child { display: none; }
+  .fx .row { gap: 0; } .fx .row > .step { margin-bottom: 8px; }
+  .fx .row > .card { border-bottom: none; border-radius: 14px 14px 0 0; padding-bottom: 12px; }
+  .fx .row > .exit { background: var(--surface); border: 1px solid var(--line); border-top: 1px dashed var(--line); border-radius: 0 0 14px 14px; padding: 10px 16px; }
+  .fx .exit .txt { font-size: 15px; } }
 .fx .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px;
   display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 14px; align-items: center; }
 @media (max-width: 480px) { .fx .card { grid-template-columns: minmax(0, 1fr); } }
@@ -433,14 +437,15 @@ section h2 { scroll-margin-top: 16px; }
   .sitenav .nav-tabs { gap: 20px; } .sitenav .nav-tabs a { padding: 9px 0 10px; font-size: 15px; }
 }
 @media (max-width: 430px) { .sitenav .hdr-langdd { display: none; }   /* the language is in Settings too (menu ☰ / account) */ .sitenav .hdr-right { gap: 6px; } .sitenav .brand b { font-size: 17px; } .sitenav .brand small { display: none; } .sitenav .brand { gap: 8px; } .sitenav .brand .logo { width: 32px; height: 32px; } }
-@media (max-width: 370px) { .sitenav .brand .logo { display: none; } .sitenav .brand b { font-size: 16px; } }
+@media (max-width: 400px) { .sitenav .brand .logo { display: none; } .sitenav .brand b { font-size: 16px; } }
 </style>
 <!-- (2 Nov, Ngoc) About (the first page, as a home page) · Exercises · Dashboard (teachers only); the name → About; on the right: 🌐 language and Sign in / the account
      menu (web/site/account_core.js).  How it works is inside About; the Follow-up map is linked from there. -->
 <nav class="sitenav" aria-label="Pages">
-  <a class="brand" href="about.html" aria-label="Python Tracer for Beginners: About"><svg class="logo" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="#24407a"/><rect x="15" y="11" width="21" height="4.5" rx="2.25" fill="#fff" opacity=".5"/><rect x="13" y="20.5" width="27" height="7" rx="2.5" fill="#ffe45c"/><rect x="17" y="22.75" width="15" height="2.5" rx="1.25" fill="#24407a"/><path d="M6.5 19.5 11.5 24 6.5 28.5Z" fill="#ffe45c"/><rect x="15" y="32.5" width="13" height="4.5" rx="2.25" fill="#fff" opacity=".5"/></svg><span class="bt"><b>Python Tracer</b><small>for beginners</small></span></a>
+  <a class="brand" href="next.html" aria-label="Python Tracer for Beginners: Exercises"><svg class="logo" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="#24407a"/><rect x="15" y="11" width="21" height="4.5" rx="2.25" fill="#fff" opacity=".5"/><rect x="13" y="20.5" width="27" height="7" rx="2.5" fill="#ffe45c"/><rect x="17" y="22.75" width="15" height="2.5" rx="1.25" fill="#24407a"/><path d="M6.5 19.5 11.5 24 6.5 28.5Z" fill="#ffe45c"/><rect x="15" y="32.5" width="13" height="4.5" rx="2.25" fill="#fff" opacity=".5"/></svg><span class="bt"><b>Python Tracer</b><small>for beginners</small></span></a>
   <div class="nav-tabs">
-    <a href="about.html" data-page="about" aria-current="page">About</a>
+    <!-- (16 Nov, Ngoc: "tạm thời ẩn") About (and its Guide / The 8 exercises) hidden from the bar; the pages are still built; the name → Exercises -->
+    <a href="about.html" data-page="about" aria-current="page" hidden>About</a>
     <a href="next.html" data-page="next">Exercises</a>
     <a href="next.html?progress=1" data-page="progress" id="nav-prog" hidden>My progress</a>
     <a href="dashboard.html" data-page="dashboard" id="nav-dash" hidden>Dashboard</a>
@@ -448,7 +453,7 @@ section h2 { scroll-margin-top: 16px; }
   <div class="hdr-right" id="hdr-right"></div>
 </nav>
 <script>
-var SITE_SHEET_URL = "https://script.google.com/macros/s/AKfycbz32AkhygZzRsIYVz7N_DZ7d-VyvCgYF0dKh0knPb9X0O1DHCTl-lTn94TS1EVBS7YLMw/exec";
+var SITE_SHEET_URL = "https://odqbjeltsathqimokmhh.supabase.co/functions/v1/api";
 // ================================================================ account_core.js (2 Nov, Ngoc): on EVERY page
 // (inserted with the menu, web/site/nav.html, by tools/build_web.py).  The account kept in this browser, the calls to the
 // Apps Script, the password rules, and the top bar: 🌐 language, Sign in / the account menu (N ▾), Settings.
@@ -575,7 +580,8 @@ function applyPrefs() {
 applyPrefs();
 
 // ---------------------------------------------------------------- the top bar (2 Nov, Ngoc: as Airbnb / Netflix)
-function hereNext() { const p = location.pathname.split("/").pop() || "about.html"; return /^[\w-]+\.html$/.test(p) ? p : "next.html"; }
+// (16 Nov, Ngoc: "tạm thời ẩn") ? Help hidden with the About pages (it opens the Guide, under About)
+function hereNext() { const p = location.pathname.split("/").pop() || "next.html"; return /^[\w-]+\.html$/.test(p) ? p : "next.html"; }
 function hdrDraw() {
   const right = document.getElementById("hdr-right"); if (!right) return;
   const dash = document.getElementById("nav-dash"); if (dash) dash.hidden = !(account && account.role === "teacher");
@@ -583,14 +589,16 @@ function hdrDraw() {
   // Exercises page the page itself says when (next_continue.js mpNav: Feedback on, the student view)
   const prog = document.getElementById("nav-prog"); if (prog && !document.querySelector('[aria-label="Exercise"]')) prog.hidden = !!(account && account.role === "teacher");
   const onSignin = /signin\.html$/.test(location.pathname);
-  const lang = `<div class="hdr-dd hdr-langdd"><button type="button" class="hdr-btn" data-dd="lang" aria-haspopup="menu" aria-expanded="false" aria-label="Language: English">🌐 <span class="hdr-lang">English</span> ▾</button>
-    <div class="hdr-menu" role="menu" hidden><button type="button" role="menuitemradio" aria-checked="true" class="hdr-it">✓ English</button>
-    <button type="button" role="menuitemradio" aria-checked="false" class="hdr-it" disabled>Tiếng Việt <span class="hdr-soon">coming soon</span></button></div></div>`;
+  // (16 Nov, Ngoc) Tiếng Việt on the pages that have it (the Exercises page: next_i18n.js); elsewhere still "coming soon"
+  const viOk = typeof I18N_ON !== "undefined", vi = viOk && pref("tracer-lang", "en") === "vi";
+  // (17 Nov, Ngoc: C) two buttons side by side, like ★ | %: a click changes the language (before: 🌐 English ▾ and a menu)
+  const lang = `<div class="hdr-score hdr-langdd" role="group" aria-label="Language"><button type="button" data-lang="en" aria-pressed="${!vi}" title="English">EN</button>`
+    + `<button type="button" data-lang="vi" aria-pressed="${vi}" title="${viOk ? "Tiếng Việt" : "Tiếng Việt: coming soon"}"${viOk ? "" : " disabled"}>VI</button></div>`;
   let me;
   if (!account) me = onSignin ? "" : `<a class="hdr-signin" href="signin.html?next=${encodeURIComponent(hereNext())}">Sign in</a>`
     + `<div class="hdr-dd"><button type="button" class="hdr-btn hdr-icon" data-dd="me" aria-haspopup="menu" aria-expanded="false" aria-label="Menu">☰</button>
       <div class="hdr-menu" role="menu" hidden>${onSignin ? "" : `<a role="menuitem" class="hdr-it" href="signin.html?next=${encodeURIComponent(hereNext())}">Log in or sign up</a><hr>`}
-      <button type="button" role="menuitem" class="hdr-it" data-act="settings">⚙ Settings</button><a role="menuitem" class="hdr-it" href="about.html#how">? Help</a></div></div>`;
+      <button type="button" role="menuitem" class="hdr-it" data-act="settings">⚙ Settings</button><a role="menuitem" class="hdr-it" href="about.html#how" hidden>? Help</a></div></div>`;
   else {
     const ini = (account.name || account.username || "?").trim().charAt(0).toUpperCase();
     me = `<div class="hdr-dd"><button type="button" class="hdr-btn hdr-me" data-dd="me" aria-haspopup="menu" aria-expanded="false" aria-label="Account menu"><span class="hdr-av">${accEsc(ini)}</span><span class="hdr-role">${account.role === "teacher" ? "Teacher" : "Student"}</span> ▾</button>
@@ -599,10 +607,21 @@ function hdrDraw() {
         ${account.role === "teacher" ? `<a role="menuitem" class="hdr-it" href="dashboard.html">Dashboard</a>`      // (2 Nov, Ngoc) a teacher has no progress and joins no class
           : `<button type="button" role="menuitem" class="hdr-it" data-act="join">${account.cls ? "Change class" : "Join a class"}</button>`}<hr>
         <button type="button" role="menuitem" class="hdr-it" data-act="settings">⚙ Settings</button>
-        <a role="menuitem" class="hdr-it" href="about.html#how">? Help</a><hr>
+        <a role="menuitem" class="hdr-it" href="about.html#how" hidden>? Help</a><hr>
         <button type="button" role="menuitem" class="hdr-it" data-act="logout">Log out</button></div></div>`;
   }
-  right.innerHTML = lang + me;
+  // (16 Nov, Ngoc: "để button bên ngoài … qua lại giữa 2 trang exercise với my progress", also without an account) the
+  // Score switch ★ / % in the bar, on the Exercises page only (it holds both pages); next_progress.js and next_sky.js read it
+  const pc = pref("tracer-score", "stars") === "pct";
+  const sc = /next\.html$/.test(location.pathname) ? `<div class="hdr-score" role="group" aria-label="Show the score as"><button type="button" data-score="stars" aria-pressed="${!pc}" title="Stars">★</button><button type="button" data-score="pct" aria-pressed="${pc}" title="Percent">%</button></div>` : "";
+  right.innerHTML = sc + lang + me;
+}
+// (16 Nov) the language: kept in this browser; changed at once on the Exercises page (next_i18n.js i18nSet)
+function setLang(l) {
+  if (l === pref("tracer-lang", "en")) return;
+  setPref("tracer-lang", l);
+  if (typeof i18nSet === "function") { i18nSet(l); hdrDraw(); return; }       // the Exercises page: at once, nothing reloaded
+  const u = new URL(location.href); u.searchParams.delete("lang"); location.href = u.toString();
 }
 function hdrCloseMenus(except) {
   document.querySelectorAll(".hdr-dd").forEach(d => { if (d === except) return; const m = d.querySelector(".hdr-menu"), b = d.querySelector("[data-dd]");
@@ -611,6 +630,10 @@ function hdrCloseMenus(except) {
 document.addEventListener("click", ev => {
   const t = ev.target.closest("[data-dd]");
   if (t) { const d = t.closest(".hdr-dd"), m = d.querySelector(".hdr-menu"); hdrCloseMenus(d); m.hidden = !m.hidden; t.setAttribute("aria-expanded", String(!m.hidden)); return; }
+  const sc = ev.target.closest("[data-score]");
+  if (sc) { setPref("tracer-score", sc.dataset.score); hdrDraw(); document.dispatchEvent(new Event("scoreview")); return; }
+  const lg = ev.target.closest("[data-lang]");
+  if (lg && (lg.closest(".hdr-menu") || lg.closest(".hdr-langdd"))) { hdrCloseMenus(); if (!lg.disabled) setLang(lg.dataset.lang); return; }
   const a = ev.target.closest("[data-act]");
   if (a && a.closest(".hdr-menu")) { hdrCloseMenus(); ({ settings: settingsDialog, join: joinDialog, logout: hdrLogout })[a.dataset.act](); return; }
   if (!ev.target.closest(".hdr-menu")) hdrCloseMenus();
@@ -639,11 +662,13 @@ function settingsDialog() {
   const radios = (name, cur, opts) => opts.map(([v, t, dis]) => `<label class="acc-check"><input type="radio" name="${name}" value="${v}"${v === cur ? " checked" : ""}${dis ? " disabled" : ""}> ${t}</label>`).join("");
   const box = hdrDialog("Settings", `<div class="hdr-set"><h3>Theme</h3>${radios("theme", pref("tracer-theme", "system"), [["system", "Same as my computer"], ["light", "Light"], ["dark", "Dark"]])}
     <h3>Text size</h3>${radios("size", pref("tracer-size", "normal"), [["normal", "Normal"], ["large", "Large"]])}
-    <h3>Language</h3>${radios("lang", "en", [["en", "English"], ["vi", "Tiếng Việt <span class=\"hdr-soon\">coming soon</span>", true]])}
+    <h3>Language</h3>${typeof I18N_ON !== "undefined" ? radios("lang", pref("tracer-lang", "en"), [["en", "English"], ["vi", "Tiếng Việt"]])
+      : radios("lang", "en", [["en", "English"], ["vi", "Tiếng Việt <span class=\"hdr-soon\">coming soon</span>", true]])}
     ${account ? `<h3>Account</h3><div class="acc-row"><button type="button" class="ghost" id="set-rec">New recovery code</button><button type="button" class="ghost" id="set-del">Delete my account</button></div>` : ""}
     <p class="acc-msg" hidden></p></div>`);
   box.querySelectorAll('input[name="theme"]').forEach(r => r.onchange = () => { setPref("tracer-theme", r.value); applyPrefs(); });
   box.querySelectorAll('input[name="size"]').forEach(r => r.onchange = () => { setPref("tracer-size", r.value); applyPrefs(); });
+  box.querySelectorAll('input[name="lang"]').forEach(r => r.onchange = () => setLang(r.value));
   if (!account) return;
   const askPw = (title, go) => {
     const b2 = hdrDialog(title, `<form class="acc-form"><label>Your password<input id="acc-p" type="password" autocomplete="current-password"></label>
@@ -726,10 +751,14 @@ function joinDialog() {
 .lay-card button:disabled { opacity: .6; cursor: default; }
 .hdr-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
 .hdr-role { font-size: 13px; font-weight: 600; color: var(--muted); margin-left: 6px; }   /* (3 Nov, Ngoc: "chỉ ra bản thân là ai") */
-@media (max-width: 430px) { .hdr-role { display: none; } }
+@media (max-width: 430px) { .hdr-role { display: none; } .sitenav .hdr-score button { padding: 6px 8px; font-size: 14px; } }   /* (16 Nov) a phone: "Python Tracer" not covered */
 .hdr-dd { position: relative; }
 .sitenav .hdr-btn { font: inherit; font-size: 15px; cursor: pointer; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
 .sitenav .hdr-btn:hover { background: var(--line); }
+.sitenav .hdr-score { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; vertical-align: middle; }
+.sitenav .hdr-score button { font: inherit; font-size: 15px; font-weight: 800; cursor: pointer; border: 0; padding: 6px 12px; background: var(--surface); color: var(--muted); }
+.sitenav .hdr-score button:disabled { cursor: default; opacity: .5; }
+.sitenav .hdr-score button[aria-pressed="true"] { background: var(--accent); color: #fff; } .sitenav .hdr-score button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .sitenav .hdr-me { padding: 3px 10px 3px 3px; display: inline-flex; gap: 6px; align-items: center; }
 .hdr-av { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--surface); font-weight: 700; }
 .sitenav a.hdr-signin { background: var(--accent); color: var(--surface); font-weight: 700; padding: 7px 16px; border-radius: 8px; box-shadow: none; }
@@ -812,6 +841,7 @@ html[data-size="large"] body { zoom: 1.15; }`;
       <div class="wr"><span class="grp">✓</span><b>You’re good at</b><span class="what">Skills correct 2 times in a row.</span><span class="where">My progress (student)</span></div>
       <div class="wr"><span class="grp">…</span><b>Coming up</b><span class="what">Skills in later exercises.</span><span class="where">My progress (student)</span></div>
       <div class="wr"><span></span><b>Needs a look</b><span class="what">Learners with the same mistake again, or still wrong after the answer was shown.</span><span class="where">Dashboard (teacher)</span></div>
+      <div class="wr"><span></span><b>Other mistakes</b><span class="what">Wrong answers that none of the 9 wrong ideas explains, grouped by what the help found (e.g. <i>Calculation error</i>, <i>Not explained yet</i>). <a href="#faq-other">What the names mean</a></span><span class="where">Dashboard (Mistakes), Learner log</span></div>
     </div>
     </div>
   </section>
@@ -951,25 +981,25 @@ print(r)</div>
     <div class="tablewrap boxed"><table>
       <tr><th style="width:16%">The wrong line</th><th style="width:40%">Smaller programs, in order</th><th>What the answers tell</th></tr>
       <tr><td class="cd">r = p - q</td><td class="cd">print(p - q)  <span class="muted"># forget r for now</span>
-print(7 - 3)  <span class="muted"># put in the numbers</span></td><td><div class="tell"><span class="if"><span class="pill2 bad">✗ <code>7 - 3</code></span></span><span class="then">→ a calculation slip</span></div><div class="tell"><span class="if"><span class="pill2 ok">✓ <code>7 - 3</code></span><span class="pill2 bad">✗ <code>p - q</code></span></span><span class="then">→ the names in the calculation <span class="code-id">X1</span></span></div><div class="tell"><span class="if"><span class="pill2 ok">✓ <code>p - q</code></span><span class="pill2 bad">✗ <code>line</code></span></span><span class="then">→ storing the result <span class="code-id">M4</span> <span class="code-id">N1</span></span></div></td></tr>
+print(7 - 3)  <span class="muted"># put in the numbers</span></td><td><div class="tell"><span class="if"><span class="pill2 bad">✗ wrong at <code>print(7 - 3)</code></span></span><span class="then">→ a calculation slip</span></div><div class="tell"><span class="if"><span class="pill2 ok">✓ right at <code>print(7 - 3)</code></span><span class="pill2 bad">✗ wrong at <code>print(p - q)</code></span></span><span class="then">→ the names in the calculation <span class="code-id">X1</span></span></div><div class="tell"><span class="if"><span class="pill2 ok">✓ right at <code>print(p - q)</code></span><span class="pill2 bad">✗ wrong at the line</span></span><span class="then">→ storing the result <span class="code-id">M4</span> <span class="code-id">N1</span></span></div></td></tr>
       <tr><td class="cd">a = 2 * a</td><td class="cd">t = 2 * a; print(t)  <span class="muted"># a on the left is t</span>
 print(2 * 2)  <span class="muted"># put in the numbers</span>
-<span class="muted">back up:</span> t = 2 * a; a = t; print(a)</td><td><div class="tell"><span class="if"><span class="pill2 ok">✓ <code>print(t)</code></span><span class="pill2 ok">✓ <code>a = t</code></span><span class="pill2 bad">✗ <code>line</code></span></span><span class="then">→ the same name on both sides <span class="code-id">N2</span></span></div></td></tr>
+<span class="muted">back up:</span> t = 2 * a; a = t; print(a)</td><td><div class="tell"><span class="if"><span class="pill2 ok">✓ right at <code>print(t)</code></span><span class="pill2 ok">✓ right at <code>a = t</code></span><span class="pill2 bad">✗ wrong at the line</span></span><span class="then">→ the same name on both sides <span class="code-id">N2</span></span></div></td></tr>
       <tr><td class="cd">a = b</td><td class="cd">a = 5; print(a)  <span class="muted"># the number put in</span>
-a = b; print(b)</td><td><div class="tell"><span class="if"><span class="pill2 ok">✓ <code>a = 5</code></span><span class="pill2 bad">✗ <code>line</code></span></span><span class="then">→ the copy <span class="code-id">X19</span></span></div><div class="tell"><span class="if"><span class="pill2 bad">✗ <code>a = 5</code></span></span><span class="then">→ the old value stays <span class="code-id">M1</span> <span class="code-id">M3</span> <span class="code-id">M2</span></span></div><div class="tell"><span class="if"><span class="pill2 bad">✗ <code>print(b)</code></span></span><span class="then">→ the copy changed b <span class="code-id">X19</span></span></div></td></tr>
-      <tr><td class="cd">z = x</td><td class="cd">z = x; print(x)</td><td><div class="tell"><span class="if"><span class="pill2 bad">✗ <code>print(x)</code></span></span><span class="then">→ the copy changed x <span class="code-id">X19</span></span></div></td></tr>
+a = b; print(b)</td><td><div class="tell"><span class="if"><span class="pill2 ok">✓ right at <code>a = 5</code></span><span class="pill2 bad">✗ wrong at the line</span></span><span class="then">→ the copy <span class="code-id">X19</span></span></div><div class="tell"><span class="if"><span class="pill2 bad">✗ wrong at <code>a = 5</code></span></span><span class="then">→ the old value stays <span class="code-id">M1</span> <span class="code-id">M3</span> <span class="code-id">M2</span></span></div><div class="tell"><span class="if"><span class="pill2 bad">✗ wrong at <code>print(b)</code></span></span><span class="then">→ the copy changed b <span class="code-id">X19</span></span></div></td></tr>
+      <tr><td class="cd">z = x</td><td class="cd">z = x; print(x)</td><td><div class="tell"><span class="if"><span class="pill2 bad">✗ wrong at <code>print(x)</code></span></span><span class="then">→ the copy changed x <span class="code-id">X19</span></span></div></td></tr>
       <tr><td class="cd">b = a * b
 <span class="muted"># b is 'OK'</span></td><td class="cd">c = a * b; print(c)  <span class="muted"># b on the left is c</span>
 print(4 * 'OK')  <span class="muted"># put in the values</span>
 print(4 * 3)  <span class="muted"># a number instead of the text</span>
-<span class="muted">back up:</span> c = a * b; b = c; print(b)</td><td><div class="tell"><span class="if"><span class="pill2 ok">✓ <code>4 * 3</code></span><span class="pill2 bad">✗ <code>4 * &#39;OK&#39;</code></span></span><span class="then">→ the text <span class="code-id">C8</span></span></div><div class="tell"><span class="if"><span class="pill2 ok">✓ <code>print(c)</code></span><span class="pill2 ok">✓ <code>b = c</code></span><span class="pill2 bad">✗ <code>line</code></span></span><span class="then">→ the same name on both sides <span class="code-id">N2</span></span></div></td></tr>
-      <tr><td>a value on the right side<br><span class="muted">(a in <code>c = a + 1</code>)</span></td><td class="cd">print(a)  <span class="muted"># a just before the line</span></td><td><div class="tell"><span class="if"><span class="pill2 ok">✓ <code>print(a)</code></span><span class="pill2 bad">✗ <code>line</code></span></span><span class="then">→ another value of a than the one just before <span class="code-id">N2</span></span></div></td></tr>
-      <tr><td class="cd">print(a + b)</td><td class="cd">print(3 + 4)  <span class="muted"># put in the numbers</span></td><td><div class="tell"><span class="if"><span class="pill2 bad">✗ <code>3 + 4</code></span></span><span class="then">→ a calculation slip</span></div><div class="tell"><span class="if"><span class="pill2 ok">✓ <code>3 + 4</code></span><span class="pill2 bad">✗ <code>line</code></span></span><span class="then">→ the names in the calculation <span class="code-id">X1</span></span></div></td></tr>
-      <tr><td class="cd">print(a, b)</td><td class="cd">print(a), then print(b)  <span class="muted"># one value at a time</span></td><td><div class="tell"><span class="if"><span class="pill2 bad">✗ <code>print(a)</code></span></span><span class="then">→ that value is the wrong one</span></div><div class="tell"><span class="if"><span class="pill2 ok">✓ <code>print(a)</code></span><span class="pill2 ok">✓ <code>print(b)</code></span><span class="pill2 bad">✗ <code>line</code></span></span><span class="then">→ the order <span class="code-id">C9</span></span></div></td></tr>
-      <tr><td><code>print(y)</code> after <code>x</code> changed</td><td class="cd">print(y) moved up, just after y's line</td><td><div class="tell"><span class="if"><span class="pill2 ok">✓ <code>moved up</code></span><span class="pill2 bad">✗ <code>line</code></span></span><span class="then">→ y follows the later change of x <span class="code-id">M5</span></span></div></td></tr>
+<span class="muted">back up:</span> c = a * b; b = c; print(b)</td><td><div class="tell"><span class="if"><span class="pill2 ok">✓ right at <code>print(4 * 3)</code></span><span class="pill2 bad">✗ wrong at <code>print(4 * &#39;OK&#39;)</code></span></span><span class="then">→ the text <span class="code-id">C8</span></span></div><div class="tell"><span class="if"><span class="pill2 ok">✓ right at <code>print(c)</code></span><span class="pill2 ok">✓ right at <code>b = c</code></span><span class="pill2 bad">✗ wrong at the line</span></span><span class="then">→ the same name on both sides <span class="code-id">N2</span></span></div></td></tr>
+      <tr><td>a value on the right side<br><span class="muted">(a in <code>c = a + 1</code>)</span></td><td class="cd">print(a)  <span class="muted"># a just before the line</span></td><td><div class="tell"><span class="if"><span class="pill2 ok">✓ right at <code>print(a)</code></span><span class="pill2 bad">✗ wrong at the line</span></span><span class="then">→ another value of a than the one just before <span class="code-id">N2</span></span></div></td></tr>
+      <tr><td class="cd">print(a + b)</td><td class="cd">print(3 + 4)  <span class="muted"># put in the numbers</span></td><td><div class="tell"><span class="if"><span class="pill2 bad">✗ wrong at <code>print(3 + 4)</code></span></span><span class="then">→ a calculation slip</span></div><div class="tell"><span class="if"><span class="pill2 ok">✓ right at <code>print(3 + 4)</code></span><span class="pill2 bad">✗ wrong at the line</span></span><span class="then">→ the names in the calculation <span class="code-id">X1</span></span></div></td></tr>
+      <tr><td class="cd">print(a, b)</td><td class="cd">print(a), then print(b)  <span class="muted"># one value at a time</span></td><td><div class="tell"><span class="if"><span class="pill2 bad">✗ wrong at <code>print(a)</code></span></span><span class="then">→ that value is the wrong one</span></div><div class="tell"><span class="if"><span class="pill2 ok">✓ right at <code>print(a)</code></span><span class="pill2 ok">✓ right at <code>print(b)</code></span><span class="pill2 bad">✗ wrong at the line</span></span><span class="then">→ the order <span class="code-id">C9</span></span></div></td></tr>
+      <tr><td><code>print(y)</code> after <code>x</code> changed</td><td class="cd">print(y) moved up, just after y's line</td><td><div class="tell"><span class="if"><span class="pill2 ok">✓ right at <code>moved up</code></span><span class="pill2 bad">✗ wrong at the line</span></span><span class="then">→ y follows the later change of x <span class="code-id">M5</span></span></div></td></tr>
       <tr><td class="cd">a = 2</td><td class="muted">nothing smaller: the line again with the Hint</td><td class="muted">—</td></tr>
     </table></div>
-    <p class="muted">Each step asks one value. A comment says what changed (<code># put in the numbers</code>).</p>
+    <p class="muted">Each step asks one value. The comments here (<code># put in the numbers</code>) explain the step for you; the page shows the program without them.</p>
     <h3>What the Hint and the answer say</h3>
       <p>The <b>Hint</b> gives the rule and where to look, never the answer. The <b>answer</b> comes only when the line is still wrong: the correct value and why. Examples from the bank exercises (the highlighted line is the one asked).</p>
       <div class="tablewrap boxed"><table>
@@ -1142,7 +1172,7 @@ x = 9
     <details class="fold"><summary>What do <i>correct line by line</i>, <i>correct after Step back</i>, <i>after the Hint</i>, <i>after seeing the answer</i> and <i>still wrong</i> mean?</summary><div><p>How an exercise with a wrong line ended, in the Learner log:</p><ul class="plainlist"><li><b>correct line by line</b>: the output was wrong, but every line was correct when asked one by one.</li><li><b>correct after Step back</b>: correct after the smaller programs.</li><li><b>correct after the Hint</b>: correct only once the Hint was shown.</li><li><b>correct after seeing the answer</b>: correct only after the answer was shown.</li><li><b>still wrong</b>: wrong even after the answer.</li></ul></div></details>
     <details class="fold"><summary>What is <b>Needs a look</b>, and why is a learner in it?</summary><div><p>The box at the top of the Dashboard: the learners you may want to talk to first. Each name comes with its reason, one of two:</p><ul class="plainlist"><li><b>Same mistake again (ex 2, 5a)</b>: the same wrong idea showed in more than one exercise.</li><li><b>Wrong after being given the answer (ex 4)</b>: the line was still wrong after the page showed the answer.</li></ul><p class="muted">Being slow or not having started is not a reason.</p></div></details>
     <details class="fold"><summary>What does <i>Not explained yet</i> mean?</summary><div><p>You see it under <b>Other mistakes</b> (Dashboard → Mistakes, and the Learner log): a wrong answer that none of the 9 wrong ideas explains. When the smaller programs found something, that is shown instead (for example a calculation slip). It is kept so it can be read by hand: a slip, a typo, or a wrong idea that is not on the list.</p></div></details>
-    <details class="fold"><summary>What do the names under <i>Other mistakes</i> mean?</summary><div><p>A wrong answer that none of the 9 wrong ideas explains is grouped by what the smaller programs (the help) found. The name says what the help saw, not what the student thinks. The numbers are examples.</p><div class="tablewrap boxed"><table><thead><tr><th>Name</th><th>Example</th><th>What the help saw</th></tr></thead><tbody><tr><td><b>Calculation error</b></td><td><pre class="hkx">print(15 + 27)   <b># typed 32</b></pre></td><td>The values were known; the sum itself was wrong (also wrong with the numbers alone).</td></tr><tr><td><b>Correct values, wrong order</b></td><td><pre class="hkx">a = 3
+    <details class="fold" id="faq-other"><summary>What do the names under <i>Other mistakes</i> mean?</summary><div><p>A wrong answer that none of the 9 wrong ideas explains is grouped by what the smaller programs (the help) found. The name says what the help saw, not what the student thinks. The numbers are examples.</p><div class="tablewrap boxed"><table><thead><tr><th>Name</th><th>Example</th><th>What the help saw</th></tr></thead><tbody><tr><td><b>Calculation error</b></td><td><pre class="hkx">print(15 + 27)   <b># typed 32</b></pre></td><td>The values were known; the sum itself was wrong (also wrong with the numbers alone).</td></tr><tr><td><b>Correct values, wrong order</b></td><td><pre class="hkx">a = 3
 b = 4
 print(a, b)      <b># typed 4 3</b></pre></td><td>All values correct, printed in another order.</td></tr><tr><td><b>Correct printing one value, wrong printing several</b></td><td><pre class="hkx">x = 5
 y = -1
@@ -1233,7 +1263,9 @@ print(a + b)     <b># typed a + b</b></pre></td><td>The code itself, not what it
   const toc = document.querySelector(".doctoc"), nav = document.querySelector(".docnav"), small = matchMedia("(max-width: 860px)");
   const title = sec => { const a = links.find(x => x.dataset.sec === sec.id); return a ? a.dataset.title || a.textContent : sec.id; };
   function show() {
-    const id = location.hash.slice(1), k = Math.max(0, secs.findIndex(x => x.id === id)), cur = secs[k];
+    // (6 Nov) a link to a question (#faq-other): its section is shown, the question opened
+    const id = location.hash.slice(1), el = id ? document.getElementById(id) : null, inSec = el && !secs.includes(el) ? el.closest(".docmain > section") : null;
+    const k = Math.max(0, inSec ? secs.indexOf(inSec) : secs.findIndex(x => x.id === id)), cur = secs[k];
     secs.forEach(x => x.hidden = x !== cur);
     links.forEach(a => a.setAttribute("aria-current", a.dataset.sec === cur.id ? "page" : "false"));
     const prev = secs[k - 1], next = secs[k + 1];
@@ -1241,8 +1273,9 @@ print(a + b)     <b># typed a + b</b></pre></td><td>The code itself, not what it
       + (next ? `<a class="next" href="#${next.id}"><small>Next →</small>${title(next)}</a>` : "");
     toc.querySelector(".cur").textContent = " · " + title(cur);
     if (small.matches) toc.open = false;
+    if (inSec && el.tagName === "DETAILS") { el.open = true; el.scrollIntoView(); return true; }
   }
-  addEventListener("hashchange", () => { show(); const m = document.querySelector(".doc"); if (m && m.getBoundingClientRect().top < 0) m.scrollIntoView(); });
+  addEventListener("hashchange", () => { if (show()) return; const m = document.querySelector(".doc"); if (m && m.getBoundingClientRect().top < 0) m.scrollIntoView(); });
   if (small.matches) toc.open = false;
   show();
 })();
