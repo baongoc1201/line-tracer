@@ -613,7 +613,7 @@ const DATA = {"main": ["M1", "M3", "M4", "M5"], "watch": ["M2", "X10", "X17", "X
 const SHEET_URL = "https://odqbjeltsathqimokmhh.supabase.co/functions/v1/api";
 // X10, X17, X18 need if or loops, which these exercises do not have, so they are left out.
 const MAIN = DATA.main, WATCH = DATA.watch.filter(m => ["M2", "X19", "X1", "N1"].includes(m)).concat(["N2"]), ALL = MAIN.concat(WATCH);   // N2: no mode, found by its behaviour (26 Oct, choice A)   // X1 added 26 Oct (trial page data only)
-const VERSION = "v4 · aaf99c3 · next";   // filled in by tools/build_web.py
+const VERSION = "v4 · aaf99c3+ · next";   // filled in by tools/build_web.py
 const EXS = DATA.exercises;
 
 // Same comparison as minterp/stepwise.py: normalize(), same(), same_output().
@@ -7131,10 +7131,11 @@ function myProgressHtml() {
     + (pc ? mpPctTop(xs) : `<div class="mpxmed"><p class="mptot">${MP_STAR} <b>${n}</b> of ${max} stars</p>`
     + `<div class="mptrk" role="img" aria-label="${n} of ${max} stars"><i style="width:${(100 * n / top).toFixed(1)}%"></i>${med}</div>`
     + (next ? `<p class="mpnx">${next[0] - n === 1 ? "1 more star" : `${next[0] - n} more stars`} for the next medal.</p>` : "") + `</div>`)
+    + mpJourneyHtml()      // (17 Nov, Ngoc: "làm đi") under the star bar: before, it sat between the rings and the tapped exercise
     + mpWatchHtml(xs, w)
     + `<h3 class="mpxh">Your exercises</h3><div class="prow${pc ? " pct" : ""}">${xs.map(node).join("")}</div>`
     + `<p class="mpkey">${pc ? "The ring shows your score for each exercise." : "Each exercise can earn 3 stars. The yellow part of the ring shows your stars."}</p>`
-    + mpJourneyHtml() + (sel ? mpDetail(sel) : "") + mpTopicsHtml(done, w) + `</div>`;
+    + (sel ? mpDetail(sel) : "") + mpTopicsHtml(done, w) + `</div>`;
 }
 // (17 Nov, Ngoc chose 3 + "10 of 14" + "từ đầu luôn", `Claude outputs/My progress khi xong hết (17-11)/so_sanh_hanh_trinh.html`)
 // "Your journey": 3 numbers that grow from the first exercise done — the lines traced (the exercises and practices done),
