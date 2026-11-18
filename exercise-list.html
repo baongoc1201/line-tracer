@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html{background:#fbfcfe}@media (prefers-color-scheme: dark){html{background:#121826}}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%2324407a'/%3E%3Crect x='15' y='11' width='21' height='4.5' rx='2.25' fill='%23fff' opacity='.5'/%3E%3Crect x='13' y='20.5' width='27' height='7' rx='2.5' fill='%23ffe45c'/%3E%3Crect x='17' y='22.75' width='15' height='2.5' rx='1.25' fill='%2324407a'/%3E%3Cpath d='M6.5 19.5 11.5 24 6.5 28.5Z' fill='%23ffe45c'/%3E%3Crect x='15' y='32.5' width='13' height='4.5' rx='2.25' fill='%23fff' opacity='.5'/%3E%3C/svg%3E"></head><body>
-<title>The 8 exercises · Python Tracer for Beginners</title>
+<title>Main exercises · Python Tracer for Beginners</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap"><style>html:root { --bg: #fbfcfe; --paper: #fbfcfe; --surface: #ffffff; --panel: #ffffff; --ink: #1e2a44; --muted: #5d6680; --line: #dde2ec; --accent: #24407a; --accent-soft: #e7ecf7; --code-bg: #f3f5fa; --code: #f3f5fa; --f-body: "Atkinson Hyperlegible", "IBM Plex Sans", system-ui, sans-serif; --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace; }@media (prefers-color-scheme: dark) { html:root:not([data-theme="light"]) { --bg: #121826; --paper: #121826; --surface: #182032; --panel: #182032; --ink: #e6eaf3; --muted: #9aa3b8; --line: #2b354b; --accent: #9db6ef; --accent-soft: #223152; --code-bg: #141b2a; --code: #141b2a; } }html:root[data-theme="dark"] { --bg: #121826; --paper: #121826; --surface: #182032; --panel: #182032; --ink: #e6eaf3; --muted: #9aa3b8; --line: #2b354b; --accent: #9db6ef; --accent-soft: #223152; --code-bg: #141b2a; --code: #141b2a; }h1, h2, h3 { font-family: var(--f-body); }</style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -608,11 +608,8 @@ function hdrDraw() {
         <a role="menuitem" class="hdr-it" href="about.html#how" hidden>? Help</a><hr>
         <button type="button" role="menuitem" class="hdr-it" data-act="logout">Log out</button></div></div>`;
   }
-  // (16 Nov, Ngoc: "để button bên ngoài … qua lại giữa 2 trang exercise với my progress", also without an account) the
-  // Score switch ★ / % in the bar, on the Exercises page only (it holds both pages); next_progress.js and next_sky.js read it
-  const pc = pref("tracer-score", "stars") === "pct";
-  const sc = /next\.html$/.test(location.pathname) ? `<div class="hdr-score" role="group" aria-label="Show the score as"><button type="button" data-score="stars" aria-pressed="${!pc}" title="Stars">★</button><button type="button" data-score="pct" aria-pressed="${pc}" title="Percent">%</button></div>` : "";
-  right.innerHTML = sc + lang + me;
+  // (17 Nov, Ngoc: "thầy chọn star") the Score switch ★ / % (16 Nov) removed: stars only
+  right.innerHTML = lang + me;
 }
 // (16 Nov) the language: kept in this browser; changed at once on the Exercises page (next_i18n.js i18nSet)
 function setLang(l) {
@@ -628,8 +625,6 @@ function hdrCloseMenus(except) {
 document.addEventListener("click", ev => {
   const t = ev.target.closest("[data-dd]");
   if (t) { const d = t.closest(".hdr-dd"), m = d.querySelector(".hdr-menu"); hdrCloseMenus(d); m.hidden = !m.hidden; t.setAttribute("aria-expanded", String(!m.hidden)); return; }
-  const sc = ev.target.closest("[data-score]");
-  if (sc) { setPref("tracer-score", sc.dataset.score); hdrDraw(); document.dispatchEvent(new Event("scoreview")); return; }
   const lg = ev.target.closest("[data-lang]");
   if (lg && (lg.closest(".hdr-menu") || lg.closest(".hdr-langdd"))) { hdrCloseMenus(); if (!lg.disabled) setLang(lg.dataset.lang); return; }
   const a = ev.target.closest("[data-act]");
@@ -742,6 +737,10 @@ function joinDialog() {
 .mpcommon { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); } .mpcommon h3 { margin: 0 0 6px; font-size: 16px; }
 .mpcommon ul { margin: 0 0 6px; padding-left: 20px; } .mpcommon .muted { font-size: 13px; color: var(--muted); margin: 0; }
 .lay-start { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: color-mix(in srgb, var(--paper, var(--bg, #fafbfd)) 94%, transparent); overflow: auto; }
+/* (18 Nov, Ngoc: B) dark mode: the dark page colour at 90% behind a pop-up (name, Settings, Welcome back), the page still
+   faintly seen; before: --paper was not set on next.html, so a near-white veil glared.  Light mode stays at 94%. */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .lay-start { background: color-mix(in srgb, var(--paper, var(--bg, #121826)) 90%, transparent); } }
+:root[data-theme="dark"] .lay-start { background: color-mix(in srgb, var(--paper, var(--bg, #121826)) 90%, transparent); }
 .lay-card { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 26px 30px; display: grid; gap: 12px; width: min(420px, 90vw); box-shadow: 0 10px 40px rgba(0,0,0,.1); font-family: var(--f-body, system-ui, sans-serif); }
 .lay-card h2 { margin: 0; font-size: 24px; } .lay-card p { margin: 0; color: var(--muted); }
 .lay-card input { font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
@@ -780,12 +779,13 @@ html[data-size="large"] body { zoom: 1.15; }`;
 </script>
 
 <div class="wrap">
-<nav class="subtabs" aria-label="About pages"><a href="about.html">Overview</a><a href="guide.html">Guide</a><a href="exercise-list.html" aria-current="page">The 8 exercises</a></nav>
+<nav class="subtabs" aria-label="About pages"><a href="about.html">Overview</a><a href="guide.html">Guide</a><a href="exercise-list.html" aria-current="page">Main exercises</a></nav>
   <header class="pagehead">
-    <h1>The 8 exercises</h1>
-    <p class="lede">The 8 main exercises, in the order every student meets them, easy to hard. The answers are not shown here.</p>
+    <h1>Main exercises</h1>
+    <p class="lede">The main exercises of each topic, in the order every student meets them, easy to hard. The answers are not shown here.</p>
     <p class="muted">“Can show” lists each wrong idea that gives a wrong answer in the program, and the first line where it does (codes: <a href="guide.html#ideas">The 9 wrong ideas</a>). Dashed: also watched. <span class="code-id">N2</span> has no fixed answer: it can show at any line with the same name on both sides.</p>
   </header>
+  <section class="pagehead"><h2>Variables · 8 exercises</h2></section>
   <div class="exlist">
     <article class="excard" id="ex1"><span class="no">1</span><div class="ex-code" aria-label="Exercise 1"><span class="ln">1</span>a = 3
 <span class="ln">2</span>b = 4
@@ -818,7 +818,7 @@ html[data-size="large"] body { zoom: 1.15; }`;
 <span class="ln">2</span>b = 'OK'
 <span class="ln">3</span>a = 2 * a
 <span class="ln">4</span>b = a * b
-<span class="ln">5</span>print(a, b)</div><div class="exinfo"><span class="lab">Practises</span><span>The same name on both sides; a number times a text</span><span class="lab">Can show</span><div><span class="mtag soft"><b>X1</b> line 1</span><span class="mtag"><b>M1</b> line 3</span><span class="mtag"><b>M3</b> line 3</span><span class="mtag"><b>M4</b> line 3</span><span class="mtag soft"><b>M2</b> line 3</span><span class="mtag soft"><b>N1</b> line 3</span><span class="mtag soft"><b>N2</b> line 3, 4</span></div><span class="lab">From</span><span class="src">Workbook Tin học 10 (KNTT), Lesson 17, Ex. 5, p. 36</span></div></article>
+<span class="ln">5</span>print(a, b)</div><div class="exinfo"><span class="lab">Practises</span><span>The same name on both sides; an integer times a string</span><span class="lab">Can show</span><div><span class="mtag soft"><b>X1</b> line 1</span><span class="mtag"><b>M1</b> line 3</span><span class="mtag"><b>M3</b> line 3</span><span class="mtag"><b>M4</b> line 3</span><span class="mtag soft"><b>M2</b> line 3</span><span class="mtag soft"><b>N1</b> line 3</span><span class="mtag soft"><b>N2</b> line 3, 4</span></div><span class="lab">From</span><span class="src">Workbook Tin học 10 (KNTT), Lesson 17, Ex. 5, p. 36</span></div></article>
     <article class="excard" id="ex8"><span class="no">8</span><div class="ex-code" aria-label="Exercise 8"><span class="ln">1</span>a = 2
 <span class="ln">2</span>b = 3
 <span class="ln">3</span>t = a + b
@@ -826,13 +826,42 @@ html[data-size="large"] body { zoom: 1.15; }`;
 <span class="ln">5</span>a = t
 <span class="ln">6</span>print(a, b)</div><div class="exinfo"><span class="lab">Practises</span><span>Swapping with a sum and a difference</span><span class="lab">Can show</span><div><span class="mtag soft"><b>X1</b> line 1</span><span class="mtag"><b>M4</b> line 3</span><span class="mtag soft"><b>N1</b> line 3</span><span class="mtag"><b>M1</b> line 4</span><span class="mtag"><b>M3</b> line 4</span><span class="mtag"><b>M5</b> line 4</span><span class="mtag soft"><b>M2</b> line 4</span><span class="mtag soft"><b>X19</b> line 5</span><span class="mtag soft"><b>N2</b> line 4</span></div><span class="lab">From</span><span class="src">Workbook Tin học 10 (KNTT), Lesson 17, Ex. 3, p. 36</span></div></article>
   </div>
+  <section class="pagehead" id="if">
+    <h2>Conditions · 5 exercises</h2>
+    <p class="muted">Each one also asks what the condition gives (True or False) before the lines that run.</p>
+  </section>
+  <div class="exlist">
+    <article class="excard" id="ex9"><span class="no">9</span><div class="ex-code" aria-label="Exercise 9"><span class="ln">1</span>a = 4
+<span class="ln">2</span>if a == 4:
+<span class="ln">3</span>    print("apple")</div><div class="exinfo"><span class="lab">Practises</span><span>A first if: the condition is True, one line inside</span><span class="lab">Can show</span><div><span class="mtag soft"><b>X1</b> line 1</span><span class="mtag"><b>M4</b> line 2</span><span class="mtag soft"><b>N1</b> line 2</span></div><span class="lab">From</span><span class="src">Made for this project</span></div></article>
+    <article class="excard" id="ex10"><span class="no">10</span><div class="ex-code" aria-label="Exercise 10"><span class="ln">1</span>a = 5
+<span class="ln">2</span>print("candy")
+<span class="ln">3</span>if a &gt;= 5:
+<span class="ln">4</span>    print("chips")
+<span class="ln">5</span>print("cookie")</div><div class="exinfo"><span class="lab">Practises</span><span>Lines before and after an if; the condition is True</span><span class="lab">Can show</span><div><span class="mtag soft"><b>X1</b> line 1</span><span class="mtag"><b>M4</b> line 3</span><span class="mtag soft"><b>N1</b> line 3</span><span class="mtag soft"><b>X16</b> line 3</span></div><span class="lab">From</span><span class="src">Made for this project</span></div></article>
+    <article class="excard" id="ex11"><span class="no">11</span><div class="ex-code" aria-label="Exercise 11"><span class="ln">1</span>a = 7
+<span class="ln">2</span>print("candy")
+<span class="ln">3</span>if a &lt; 3:
+<span class="ln">4</span>    print("chips")
+<span class="ln">5</span>print("cookie")</div><div class="exinfo"><span class="lab">Practises</span><span>The same shape; the condition is False, so the line inside is skipped</span><span class="lab">Can show</span><div><span class="mtag soft"><b>X1</b> line 1</span><span class="mtag"><b>M4</b> line 3</span><span class="mtag"><b>M6</b> line 3</span><span class="mtag"><b>M9</b> line 3</span><span class="mtag soft"><b>N1</b> line 3</span></div><span class="lab">From</span><span class="src">Made for this project, in the shape of a task of Swidan, Hermans &amp; Smit (2018)</span></div></article>
+    <article class="excard" id="ex12"><span class="no">12</span><div class="ex-code" aria-label="Exercise 12"><span class="ln">1</span>a = 2
+<span class="ln">2</span>if a &gt; 6:
+<span class="ln">3</span>    print("rainy")
+<span class="ln">4</span>else:
+<span class="ln">5</span>    print("cloudy")</div><div class="exinfo"><span class="lab">Practises</span><span>if / else; the condition is False, so the else line runs</span><span class="lab">Can show</span><div><span class="mtag soft"><b>X1</b> line 1</span><span class="mtag"><b>M4</b> line 2</span><span class="mtag"><b>M9</b> line 2</span><span class="mtag soft"><b>N1</b> line 2</span></div><span class="lab">From</span><span class="src">Made for this project</span></div></article>
+    <article class="excard" id="ex13"><span class="no">13</span><div class="ex-code" aria-label="Exercise 13"><span class="ln">1</span>a = 7
+<span class="ln">2</span>if a &lt;= 7:
+<span class="ln">3</span>    print("rainy")
+<span class="ln">4</span>else:
+<span class="ln">5</span>    print("cloudy")</div><div class="exinfo"><span class="lab">Practises</span><span>if / else; the condition is True, so only the if line runs</span><span class="lab">Can show</span><div><span class="mtag soft"><b>X1</b> line 1</span><span class="mtag"><b>M4</b> line 2</span><span class="mtag soft"><b>N1</b> line 2</span><span class="mtag soft"><b>X17</b> line 2</span></div><span class="lab">From</span><span class="src">Made for this project</span></div></article>
+  </div>
   <p class="muted">Practise questions, reviews and the final check are not on this list: they come from a bank of 55 exercises made from 11 templates, or are made on the spot from the wrong line, with new names and numbers (<a href="guide.html#design">how the bank is made</a>).</p>
 </div>
 <script>
 // (6 Nov, Ngoc: "rê chuột vào tên id misconception thì biết misconception đó là gì") each code says its wrong idea on
 // hover or focus, as on the Guide; a click opens the Guide's table of the 9 wrong ideas
 (() => { const tip = document.createElement("div"); tip.className = "codetip"; tip.hidden = true; tip.setAttribute("role", "tooltip"); document.body.append(tip);
-  const N = {"M1": "a variable keeps its old values too", "M3": "a variable keeps its first value", "M4": "a variable stores the calculation as text", "M5": "a variable keeps the formula, so it changes later", "M2": "a new value is added to the old one", "X19": "a = b copies a into b", "X1": "print(a) shows the name a, not its value", "N1": "a variable keeps the calculation with the numbers put in", "N2": "gets a = 2 * a wrong, but correct when the line is split"};
+  const N = {"M1": "a variable keeps its old values too", "M3": "a variable keeps its first value", "M4": "a variable stores the calculation as text", "M5": "a variable keeps the formula, so it changes later", "M2": "a new value is added to the old one", "X19": "a = b copies a into b", "X1": "print(a) shows the name a, not its value", "N1": "a variable keeps the calculation with the numbers put in", "N2": "gets a = 2 * a wrong, but correct when the line is split", "M6": "a False if with no else ends the program", "M9": "the lines inside if run even when the condition is False", "X16": "the line after if is part of else, so it is skipped when the if lines run", "X17": "both the if lines and the else lines run"};
   document.querySelectorAll(".mtag, .code-id").forEach(el => { const b = el.querySelector("b") || el, c = b.textContent.trim(), n = N[c]; if (!n) return;
     el.tabIndex = 0; el.classList.add("has-tip"); el.setAttribute("aria-label", el.textContent.trim() + ": " + n);
     const show = () => { const r = el.getBoundingClientRect(); tip.textContent = c + ": " + n; tip.hidden = false;

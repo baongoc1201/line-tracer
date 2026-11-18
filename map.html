@@ -295,11 +295,8 @@ function hdrDraw() {
         <a role="menuitem" class="hdr-it" href="about.html#how" hidden>? Help</a><hr>
         <button type="button" role="menuitem" class="hdr-it" data-act="logout">Log out</button></div></div>`;
   }
-  // (16 Nov, Ngoc: "để button bên ngoài … qua lại giữa 2 trang exercise với my progress", also without an account) the
-  // Score switch ★ / % in the bar, on the Exercises page only (it holds both pages); next_progress.js and next_sky.js read it
-  const pc = pref("tracer-score", "stars") === "pct";
-  const sc = /next\.html$/.test(location.pathname) ? `<div class="hdr-score" role="group" aria-label="Show the score as"><button type="button" data-score="stars" aria-pressed="${!pc}" title="Stars">★</button><button type="button" data-score="pct" aria-pressed="${pc}" title="Percent">%</button></div>` : "";
-  right.innerHTML = sc + lang + me;
+  // (17 Nov, Ngoc: "thầy chọn star") the Score switch ★ / % (16 Nov) removed: stars only
+  right.innerHTML = lang + me;
 }
 // (16 Nov) the language: kept in this browser; changed at once on the Exercises page (next_i18n.js i18nSet)
 function setLang(l) {
@@ -315,8 +312,6 @@ function hdrCloseMenus(except) {
 document.addEventListener("click", ev => {
   const t = ev.target.closest("[data-dd]");
   if (t) { const d = t.closest(".hdr-dd"), m = d.querySelector(".hdr-menu"); hdrCloseMenus(d); m.hidden = !m.hidden; t.setAttribute("aria-expanded", String(!m.hidden)); return; }
-  const sc = ev.target.closest("[data-score]");
-  if (sc) { setPref("tracer-score", sc.dataset.score); hdrDraw(); document.dispatchEvent(new Event("scoreview")); return; }
   const lg = ev.target.closest("[data-lang]");
   if (lg && (lg.closest(".hdr-menu") || lg.closest(".hdr-langdd"))) { hdrCloseMenus(); if (!lg.disabled) setLang(lg.dataset.lang); return; }
   const a = ev.target.closest("[data-act]");
@@ -429,6 +424,10 @@ function joinDialog() {
 .mpcommon { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); } .mpcommon h3 { margin: 0 0 6px; font-size: 16px; }
 .mpcommon ul { margin: 0 0 6px; padding-left: 20px; } .mpcommon .muted { font-size: 13px; color: var(--muted); margin: 0; }
 .lay-start { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: color-mix(in srgb, var(--paper, var(--bg, #fafbfd)) 94%, transparent); overflow: auto; }
+/* (18 Nov, Ngoc: B) dark mode: the dark page colour at 90% behind a pop-up (name, Settings, Welcome back), the page still
+   faintly seen; before: --paper was not set on next.html, so a near-white veil glared.  Light mode stays at 94%. */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .lay-start { background: color-mix(in srgb, var(--paper, var(--bg, #121826)) 90%, transparent); } }
+:root[data-theme="dark"] .lay-start { background: color-mix(in srgb, var(--paper, var(--bg, #121826)) 90%, transparent); }
 .lay-card { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 26px 30px; display: grid; gap: 12px; width: min(420px, 90vw); box-shadow: 0 10px 40px rgba(0,0,0,.1); font-family: var(--f-body, system-ui, sans-serif); }
 .lay-card h2 { margin: 0; font-size: 24px; } .lay-card p { margin: 0; color: var(--muted); }
 .lay-card input { font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
